@@ -1,0 +1,19 @@
+---
+description: TypeScript compiler and path alias guidance
+---
+### TypeScript Configuration
+- Target/module: ESNext with `bundler` module resolution.
+- Strict mode enabled; `allowJs` true; `noEmit` true; source maps enabled.
+- Vue JSX preserved, `jsxImportSource: vue`.
+- Types included: `vite/client` and `resources/js/types`.
+
+### Path Aliases
+- `@/*` → `resources/js/*` per [`tsconfig.json`](mdc:tsconfig.json).
+- Use alias for internal imports; prefer relative paths only for nearby files.
+
+### Import Style
+- Use ESM imports. `esModuleInterop` is enabled.
+- Keep imports ordered; let Prettier organize imports (plugin installed).
+
+### Include Globs
+- TS includes `resources/js/**/*.{ts,tsx,vue}`; ensure new files live under `resources/js` to be type-checked.

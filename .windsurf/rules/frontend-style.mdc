@@ -1,0 +1,22 @@
+---
+globs: resources/js/**/*.ts,resources/js/**/*.vue,resources/css/**/*.css
+---
+### Frontend Conventions
+- **Framework**: Vue 3 with TypeScript and InertiaJS.
+- **Styling**: Tailwind CSS v4. Prefer utility classes and `prettier-plugin-tailwindcss` for class sorting.
+- **Components**: Place shared UI in `resources/js/components` and `resources/js/components/ui`.
+- **Pages**: Route-backed pages live in `resources/js/pages`.
+- **Imports**:
+  - Use the `@/` alias for imports from `resources/js` (configured in `tsconfig.json`).
+  - Example: `import Button from '@/components/ui/button/Button.vue'`.
+- **SSR Safety**: Avoid accessing `window`/`document` in setup on SSR routes; gate with `if (typeof window !== 'undefined')`.
+- **Inertia Titles**: Use the provided title function in `createInertiaApp` to set document titles.
+
+### Tailwind Usage
+- Use semantic utility groupings and avoid ad-hoc inline styles.
+- Prefer variants and responsive utilities over custom CSS when possible.
+- Keep class strings readable; rely on `clsx`/`tailwind-merge` where dynamic.
+
+### Linting/Formatting
+- Run `npm run lint` and `npm run format` before commits.
+- Follow ESLint Vue/TS recommended rules; multi-word component names rule is disabled per project config.

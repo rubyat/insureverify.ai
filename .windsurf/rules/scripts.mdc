@@ -1,0 +1,14 @@
+---
+description: Common dev scripts for this project
+---
+### NPM Scripts
+- **Dev server**: `npm run dev` (Vite with HMR)
+- **Build (client)**: `npm run build`
+- **Build (SSR + client)**: `npm run build:ssr`
+- **Lint (fix)**: `npm run lint`
+- **Format (write)**: `npm run format`
+- **Format (check)**: `npm run format:check`
+
+### Notes
+- Vite config lives in [`vite.config.ts`](mdc:vite.config.ts) and includes Vue + Tailwind + Laravel plugin.
+- Prettier plugins include import organization and Tailwind class sorting.

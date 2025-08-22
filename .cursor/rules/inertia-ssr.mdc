@@ -1,0 +1,18 @@
+---
+description: Inertia + SSR usage and page resolution
+---
+### Inertia + SSR Conventions
+- Client entry: [`resources/js/app.ts`](mdc:resources/js/app.ts)
+- SSR entry: [`resources/js/ssr.ts`](mdc:resources/js/ssr.ts)
+- Pages are dynamically resolved with `resolvePageComponent('./pages/${name}.vue', import.meta.glob('./pages/**/*.vue'))`.
+- Use `ZiggyVue` for route generation; on SSR, pass the `page.props.ziggy` and `location` as shown in `ssr.ts`.
+- Progress bar color is set in `app.ts`.
+
+### Blade Integration
+- The root layout is [`resources/views/app.blade.php`](mdc:resources/views/app.blade.php), which applies theme classes, fonts, favicons, and injects the current page via `@inertia`.
+- The Blade layout includes `@routes` and `@vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])` to optimize HMR and asset loading.
+
+### SSR Notes
+- For code that requires DOM APIs, guard with `if (typeof window !== 'undefined')`.
+- Avoid side effects at import time that depend on browser globals.
+- Prefer passing server-derived props via Inertia responses from controllers.

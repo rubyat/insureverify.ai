@@ -1,0 +1,14 @@
+---
+description: Database seeding for roles and default assignments
+---
+### Roles and Permissions Seeding
+- Seeder: [`database/seeders/RolesAndPermissionsSeeder.php`](mdc:database/seeders/RolesAndPermissionsSeeder.php)
+- Behavior:
+  - Clears cached permissions via `PermissionRegistrar::forgetCachedPermissions()`.
+  - Ensures roles `admin` and `subscriber` exist with guard `web`.
+  - Assigns `admin` role to `User::find(1)` if present.
+- Ensure this seeder runs from [`DatabaseSeeder`](mdc:database/seeders/DatabaseSeeder.php).
+
+### Notes
+- `User` model uses `Spatie\Permission\Traits\HasRoles`.
+- The `role` middleware uses these roles for route access control.

@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+### Project Structure and Entry Points
+- **Backend (Laravel)**
+  - Routes: [`routes/web.php`](mdc:routes/web.php), [`routes/auth.php`](mdc:routes/auth.php), [`routes/settings.php`](mdc:routes/settings.php)
+  - HTTP Kernel and Middleware config: [`bootstrap/app.php`](mdc:bootstrap/app.php)
+  - Controllers: [`app/Http/Controllers`](mdc:app/Http/Controllers)
+  - Middleware: [`app/Http/Middleware`](mdc:app/Http/Middleware)
+  - Models: [`app/Models`](mdc:app/Models)
+  - Database: migrations and seeders under [`database`](mdc:database)
+- **Frontend (Inertia + Vue 3 + Vite)**
+  - Vite config: [`vite.config.ts`](mdc:vite.config.ts)
+  - TypeScript config: [`tsconfig.json`](mdc:tsconfig.json)
+  - App entry: [`resources/js/app.ts`](mdc:resources/js/app.ts)
+  - SSR entry: [`resources/js/ssr.ts`](mdc:resources/js/ssr.ts)
+  - Pages: [`resources/js/pages`](mdc:resources/js/pages)
+  - Components: [`resources/js/components`](mdc:resources/js/components)
+  - Styles: [`resources/css/app.css`](mdc:resources/css/app.css)
+  - Root blade: [`resources/views/app.blade.php`](mdc:resources/views/app.blade.php)
+
+### Inertia/Vue Resolution
+- Pages are resolved by name via `resolvePageComponent` from `./pages/<Name>.vue`.
+- The Blade template injects the current page with `@vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])` and `@inertiaHead`/`@inertia`.
+
+### Aliases and Paths
+- TypeScript path alias `@/*` maps to `resources/js/*` per [`tsconfig.json`](mdc:tsconfig.json).
+
+### Middleware Aliases
+- The `role` middleware alias maps to `App\Http\Middleware\AdminMiddleware` per [`bootstrap/app.php`](mdc:bootstrap/app.php).

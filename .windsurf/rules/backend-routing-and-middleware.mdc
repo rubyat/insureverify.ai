@@ -1,0 +1,23 @@
+---
+description: Laravel routing and middleware alias usage for roles
+---
+### Routing
+- Web routes: [`routes/web.php`](mdc:routes/web.php)
+- Additional route groups: [`routes/auth.php`](mdc:routes/auth.php), [`routes/settings.php`](mdc:routes/settings.php)
+
+### Middleware
+- Global/middleware configuration occurs in [`bootstrap/app.php`](mdc:bootstrap/app.php).
+- The `role` middleware alias maps to `App\Http\Middleware\AdminMiddleware`.
+- Use on routes like:
+  ```php
+  Route::middleware(['role:admin'])->group(function () {
+      // admin-only routes
+  });
+  // multiple roles
+  Route::middleware(['role:admin|manager'])->get('/dashboard', ...);
+  ```
+
+### AdminMiddleware Behavior
+- Defaults to `admin` if no roles are passed.
+- Supports pipe-delimited roles in the alias parameter.
+- Relies on `Spatie\Permission` via `HasRoles` trait on `User`.
