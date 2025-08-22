@@ -165,3 +165,10 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Marketing helpers */
+@layer utilities {
+  .btn-primary {
+    @apply bg-sky-700 text-white hover:bg-sky-800 transition;
+  }
+}

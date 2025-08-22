@@ -9,10 +9,22 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Marketing\PagesController;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+// Marketing site
+Route::get('/', [PagesController::class, 'home'])->name('home');
+Route::get('/features', [PagesController::class, 'features'])->name('features');
+Route::get('/about-us', [PagesController::class, 'about'])->name('about');
+Route::get('/docs', [PagesController::class, 'docs'])->name('docs');
+Route::get('/contact', [PagesController::class, 'contact'])->name('contact');
+Route::post('/contact', [PagesController::class, 'submitContact'])->name('contact.submit');
+Route::get('/privacy-policy', [PagesController::class, 'privacy'])->name('privacy');
+Route::get('/terms-of-service', [PagesController::class, 'terms'])->name('terms');
+Route::get('/signup', [PagesController::class, 'signup'])->name('signup');
+// Keep existing public plans listing; add a convenience alias
+Route::get('/pricing', function () {
+    return redirect()->route('plans.index');
+})->name('pricing');
 
 Route::get('dashboard', function () {
     $user = auth()->user();
