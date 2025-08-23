@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Subscribed;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -11,7 +12,19 @@ class PagesController extends Controller
 {
     public function home()
     {
-        return Inertia::render('Home');
+        $plans = Plan::query()
+            ->where('is_active', true)
+            ->where('visibility', 'Public')
+            ->orderBy('sort_order')
+            ->orderBy('price')
+            ->get([
+                'id', 'name', 'slug', 'price', 'image_limit', 'description',
+                'verifications_included', 'features', 'cta_label', 'cta_route'
+            ]);
+
+        return Inertia::render('Home', [
+            'plans' => $plans,
+        ]);
     }
 
     public function features()

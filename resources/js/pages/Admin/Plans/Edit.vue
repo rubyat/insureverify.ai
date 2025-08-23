@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import PlanForm from './PlanForm.vue'
 
 const props = defineProps<{ plan: any }>();
 
@@ -9,8 +10,17 @@ const form = useForm({
   name: props.plan.name,
   slug: props.plan.slug,
   stripe_plan_id: props.plan.stripe_plan_id,
+  anet_plan_id: props.plan.anet_plan_id ?? '',
   price: props.plan.price,
   image_limit: props.plan.image_limit,
+  description: props.plan.description ?? '',
+  verifications_included: props.plan.verifications_included ?? '',
+  features: Array.isArray(props.plan.features) ? props.plan.features.join('\n') : (props.plan.features ?? ''),
+  cta_label: props.plan.cta_label ?? 'Get Started',
+  cta_route: props.plan.cta_route ?? 'plans.index',
+  sort_order: props.plan.sort_order ?? 0,
+  visibility: props.plan.visibility ?? 'Public',
+  is_active: props.plan.is_active ?? true,
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,47 +37,32 @@ const submit = () => {
 <template>
   <Head title="Edit Plan" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6 bg-gray-50">
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold">Edit Plan</h1>
         <Link :href="route('admin.plans.index')" class="text-sm">Back</Link>
       </div>
 
-      <form @submit.prevent="submit" class="space-y-4 max-w-xl">
-        <div>
-          <label class="block text-sm font-medium">Name</label>
-          <input v-model="form.name" type="text" class="mt-1 w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.name" class="text-sm text-red-600">{{ form.errors.name }}</div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Slug</label>
-          <input v-model="form.slug" type="text" class="mt-1 w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.slug" class="text-sm text-red-600">{{ form.errors.slug }}</div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Stripe Plan ID</label>
-          <input v-model="form.stripe_plan_id" type="text" class="mt-1 w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.stripe_plan_id" class="text-sm text-red-600">{{ form.errors.stripe_plan_id }}</div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Price</label>
-          <input v-model="form.price" type="number" step="0.01" class="mt-1 w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.price" class="text-sm text-red-600">{{ form.errors.price }}</div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium">Image Limit</label>
-          <input v-model.number="form.image_limit" type="number" min="0" class="mt-1 w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.image_limit" class="text-sm text-red-600">{{ form.errors.image_limit }}</div>
-        </div>
-
-        <div>
-          <button :disabled="form.processing" type="submit" class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-white">Save</button>
-        </div>
-      </form>
+      <PlanForm
+        v-model:name="form.name"
+        v-model:slug="form.slug"
+        v-model:stripe_plan_id="form.stripe_plan_id"
+        v-model:anet_plan_id="form.anet_plan_id"
+        v-model:price="form.price"
+        v-model:image_limit="form.image_limit"
+        v-model:description="form.description"
+        v-model:verifications_included="form.verifications_included"
+        v-model:features="form.features"
+        v-model:cta_label="form.cta_label"
+        v-model:cta_route="form.cta_route"
+        v-model:sort_order="form.sort_order"
+        v-model:visibility="form.visibility"
+        v-model:is_active="form.is_active"
+        :errors="form.errors"
+        :processing="form.processing"
+        :on-submit="submit"
+        submit-label="Save"
+      />
     </div>
   </AppLayout>
 </template>

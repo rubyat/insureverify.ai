@@ -41,11 +41,30 @@ class PlanController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:plans,slug'],
+            'slug' => ['nullable', 'string', 'max:255'],
             'stripe_plan_id' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'image_limit' => ['required', 'integer', 'min:0'],
+            'anet_plan_id' => ['nullable', 'string', 'max:255'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'image_limit' => ['nullable', 'integer', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'verifications_included' => ['nullable', 'integer', 'min:0'],
+            'features' => ['nullable'], // can be array or string from form
+            'cta_label' => ['nullable', 'string', 'max:255'],
+            'cta_route' => ['nullable', 'string', 'max:255'],
+            'sort_order' => ['nullable', 'integer'],
+            'visibility' => ['required', 'in:Public,Private'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        // Normalize features if provided as textarea string
+        if (isset($validated['features']) && is_string($validated['features'])) {
+            $features = preg_split('/\r?\n/', $validated['features']);
+            $validated['features'] = array_values(array_filter(array_map('trim', $features)));
+        }
+
+        // Compute unique slug from provided slug or name
+        $base = $validated['slug'] ?? $validated['name'];
+        $validated['slug'] = Plan::uniqueSlug($base);
 
         Plan::create($validated);
 
@@ -80,11 +99,29 @@ class PlanController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:plans,slug,' . $plan->id],
+            'slug' => ['nullable', 'string', 'max:255'],
             'stripe_plan_id' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'image_limit' => ['required', 'integer', 'min:0'],
+            'anet_plan_id' => ['nullable', 'string', 'max:255'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'image_limit' => ['nullable', 'integer', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'verifications_included' => ['nullable', 'integer', 'min:0'],
+            'features' => ['nullable'],
+            'cta_label' => ['nullable', 'string', 'max:255'],
+            'cta_route' => ['nullable', 'string', 'max:255'],
+            'sort_order' => ['nullable', 'integer'],
+            'visibility' => ['required', 'in:Public,Private'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if (isset($validated['features']) && is_string($validated['features'])) {
+            $features = preg_split('/\r?\n/', $validated['features']);
+            $validated['features'] = array_values(array_filter(array_map('trim', $features)));
+        }
+
+        // Compute unique slug. If slug empty, derive from name; ignore current record when checking uniqueness.
+        $base = $validated['slug'] ?? $validated['name'];
+        $validated['slug'] = Plan::uniqueSlug($base, $plan->id);
 
         $plan->update($validated);
 

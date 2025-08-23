@@ -28,6 +28,8 @@ Route::get('/pricing', function () {
 
 // Public plans listing
 Route::get('/plans', [PublicPlanController::class, 'index'])->name('plans.index');
+// Public plan signup/preview page
+Route::get('/plan/{slug}', [PublicPlanController::class, 'show'])->name('plan.show');
 
 // Frontend (authenticated customer) routes
 Route::middleware(['auth'])->group(function () {

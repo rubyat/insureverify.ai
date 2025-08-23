@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import SiteLayout from '@/layouts/SiteLayout.vue'
 import { Link, Head } from '@inertiajs/vue3'
+
+const props = defineProps<{ plans?: Array<any> }>()
 </script>
 
 <template>
@@ -89,91 +91,30 @@ import { Link, Head } from '@inertiajs/vue3'
         </div>
 
         <div class="grid lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
-          <!-- Silver -->
-          <div class="border rounded-lg p-6 flex flex-col">
-            <h3 class="font-semibold text-lg">Silver</h3>
-            <div class="mt-2 text-3xl font-extrabold tracking-tight">$99 <span class="text-base font-medium text-foreground/70">/month</span></div>
-            <p class="text-sm text-foreground/70 mt-2">8 verifications included</p>
-            <p class="text-sm mt-4 text-foreground/80">Perfect for startups, small teams, or companies just getting started.</p>
-            <ul class="mt-6 space-y-3 text-sm text-foreground/80">
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> No monthly minimum</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Access to all verification features</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Real-time license and insurance checks</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Email and chat support</li>
-            </ul>
-            <div class="mt-auto pt-8">
-              <Link :href="route('plans.index')" class="btn-primary w-full text-center px-4 py-3 rounded">Get Started</Link>
+          <div
+            v-for="plan in props.plans ?? []"
+            :key="plan.id"
+            class="border rounded-lg p-6 flex flex-col"
+          >
+            <h3 class="font-semibold text-lg">{{ plan.name }}</h3>
+            <div class="mt-2 text-3xl font-extrabold tracking-tight">
+              <template v-if="plan.price !== null && plan.price !== undefined">
+                ${{ Number(plan.price).toFixed(0) }} <span class="text-base font-medium text-foreground/70">/month</span>
+              </template>
+              <template v-else>
+                Custom Pricing
+              </template>
             </div>
-          </div>
-
-          <!-- Bronze -->
-          <div class="border rounded-lg p-6 flex flex-col">
-            <h3 class="font-semibold text-lg">Bronze</h3>
-            <div class="mt-2 text-3xl font-extrabold tracking-tight">$199 <span class="text-base font-medium text-foreground/70">/month</span></div>
-            <p class="text-sm text-foreground/70 mt-2">20 verifications included</p>
-            <p class="text-sm mt-4 text-foreground/80">For growing car rental platforms or businesses with steady verification volume.</p>
+            <p v-if="plan.verifications_included" class="text-sm text-foreground/70 mt-2">{{ plan.verifications_included }} verifications included</p>
+            <p v-if="plan.description" class="text-sm mt-4 text-foreground/80">{{ plan.description }}</p>
             <ul class="mt-6 space-y-3 text-sm text-foreground/80">
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Priority API access</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Full audit trail and activity logs</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Dedicated account manager</li>
+              <li v-for="(feat, idx) in (plan.features || [])" :key="idx" class="flex items-start gap-2">
+                <span class="mt-1 w-2 h-2 bg-black rounded-full"></span>
+                <span>{{ feat }}</span>
+              </li>
             </ul>
             <div class="mt-auto pt-8">
-              <Link :href="route('plans.index')" class="btn-primary w-full text-center px-4 py-3 rounded">Get Started</Link>
-            </div>
-          </div>
-
-          <!-- Gold -->
-          <div class="border rounded-lg p-6 flex flex-col">
-            <h3 class="font-semibold text-lg">Gold</h3>
-            <div class="mt-2 text-3xl font-extrabold tracking-tight">$349 <span class="text-base font-medium text-foreground/70">/month</span></div>
-            <p class="text-sm text-foreground/70 mt-2">40 verifications included</p>
-            <p class="text-sm mt-4 text-foreground/80">Verify identity, license, and insurance in real-time with API integration.</p>
-            <ul class="mt-6 space-y-3 text-sm text-foreground/80">
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Identity verification</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> License status validation</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Insurance coverage check</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Real-time API response</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Fraud prevention system</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Basic API analytics</li>
-            </ul>
-            <div class="mt-auto pt-8">
-              <Link :href="route('plans.index')" class="btn-primary w-full text-center px-4 py-3 rounded">Get Started</Link>
-            </div>
-          </div>
-
-          <!-- Platinum -->
-          <div class="border rounded-lg p-6 flex flex-col">
-            <h3 class="font-semibold text-lg">Platinum</h3>
-            <div class="mt-2 text-3xl font-extrabold tracking-tight">$499 <span class="text-base font-medium text-foreground/70">/month</span></div>
-            <p class="text-sm text-foreground/70 mt-2">75 verifications included</p>
-            <p class="text-sm mt-4 text-foreground/80">Verify identity, license, insurance, and record a phone call with AI-backed voice confirmation for added security.</p>
-            <ul class="mt-6 space-y-3 text-sm text-foreground/80">
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Identity verification</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> License & insurance checks</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> AI-enhanced voice confirmation</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Call recording with timestamps</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Advanced fraud prevention</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Customizable verification flow</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Priority API support</li>
-            </ul>
-            <div class="mt-auto pt-8">
-              <Link :href="route('plans.index')" class="btn-primary w-full text-center px-4 py-3 rounded">Request Access</Link>
-            </div>
-          </div>
-
-          <!-- Enterprise -->
-          <div class="border rounded-lg p-6 flex flex-col">
-            <h3 class="font-semibold text-lg">Enterprise</h3>
-            <div class="mt-2 text-3xl font-extrabold tracking-tight">Custom Pricing</div>
-            <p class="text-sm mt-4 text-foreground/80">Custom plans for high-volume fleets, platforms, or partners who need advanced features and support.</p>
-            <ul class="mt-6 space-y-3 text-sm text-foreground/80">
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Volume-based discounts</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Custom SLAs</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> API usage insights and reporting</li>
-              <li class="flex items-start gap-2"><span class="mt-1 w-2 h-2 bg-black rounded-full"></span> Premium support and onboarding</li>
-            </ul>
-            <div class="mt-auto pt-8">
-              <Link :href="route('contact')" class="btn-primary w-full text-center px-4 py-3 rounded">Contact us</Link>
+              <Link :href="route('plan.show', plan.slug)" class="btn-primary w-full text-center px-4 py-3 rounded">{{ plan.cta_label || 'Get Started' }}</Link>
             </div>
           </div>
         </div>

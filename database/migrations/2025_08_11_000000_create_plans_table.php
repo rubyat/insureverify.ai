@@ -16,8 +16,21 @@ return new class extends Migration {
             $table->string('slug')->unique();
             $table->string('stripe_plan_id');
             $table->string('anet_plan_id')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->integer('image_limit');
+            // price can be nullable to allow "Custom Pricing" style plans (e.g., Enterprise)
+            $table->decimal('price', 10, 2)->nullable();
+            // legacy usage limit (kept); can be repurposed or ignored by frontend
+            $table->integer('image_limit')->default(0);
+            // marketing/display fields for public pricing sections
+            $table->text('description')->nullable();
+            $table->integer('verifications_included')->nullable();
+            $table->json('features')->nullable();
+            $table->string('cta_label')->default('Get Started');
+            // store a Laravel route name for CTA; e.g., 'plans.index' or 'contact'
+            $table->string('cta_route')->default('plans.index');
+            $table->integer('sort_order')->default(0);
+            // plan visibility in pricing sections or internal only
+            $table->enum('visibility', ['Public', 'Private'])->default('Public');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
