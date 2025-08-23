@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,7 +32,22 @@ class UsersController extends Controller
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
+            'canManageAdmins' => Auth::user()?->hasRole('super-admin') === true,
         ]);
+    }
+
+    public function makeAdmin(User $user): RedirectResponse
+    {
+        // Only super-admin can access (also protected by route middleware)
+        $user->assignRole('admin');
+        return back()->with('success', 'User promoted to admin.');
+    }
+
+    public function removeAdmin(User $user): RedirectResponse
+    {
+        // Prevent removing admin from the last super-admin if desired (optional)
+        $user->removeRole('admin');
+        return back()->with('success', 'Admin role removed from user.');
     }
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Marketing;
+namespace App\Http\Controllers\Subscribed;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

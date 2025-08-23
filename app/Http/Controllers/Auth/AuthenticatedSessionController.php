@@ -33,7 +33,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'super-admin'])) {
+            // Always send admins to the admin dashboard
+            return redirect()->to(route('dashboard', absolute: false));
+        }
+        // Subscribers/customers: respect intended, fallback to app dashboard
+        return redirect()->intended(route('app.dashboard', absolute: false));
     }
 
     /**

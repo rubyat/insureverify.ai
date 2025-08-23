@@ -22,6 +22,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
     ];
@@ -60,6 +62,14 @@ class User extends Authenticatable
     public function subscriptions(): HasMany
     {
         return $this->hasMany(\Laravel\Cashier\Subscription::class);
+    }
+
+    /**
+     * A user can have many saved cards.
+     */
+    public function cards(): HasMany
+    {
+        return $this->hasMany(UserCard::class);
     }
 
     /**

@@ -19,11 +19,13 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create roles if they don't exist
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $subscriberRole = Role::firstOrCreate(['name' => 'subscriber', 'guard_name' => 'web']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 
-        // Assign admin role to user with ID 1 if present
+        // Assign super-admin and admin roles to user with ID 1 if present
         $adminUser = User::find(1);
         if ($adminUser) {
             $adminUser->assignRole($adminRole);
+            $adminUser->assignRole($superAdminRole);
         }
     }
 }

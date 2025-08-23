@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3';
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue'
 import type { BreadcrumbItemType } from '@/types';
 
 interface Props {
@@ -14,6 +14,20 @@ withDefaults(defineProps<Props>(), {
 // Show bottom border only when header is in "stuck" state (page scrolled)
 const stuck = ref(false)
 const sentinel = ref<HTMLElement | null>(null)
+const menuOpen = ref(false)
+
+const page = usePage()
+const authUser = computed(() => (page.props as any)?.auth?.user)
+
+function onDocumentClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  const menu = document.getElementById('user-menu')
+  const trigger = document.getElementById('user-menu-button')
+  if (!menu || !trigger) return
+  if (!menu.contains(target) && !trigger.contains(target)) {
+    menuOpen.value = false
+  }
+}
 
 let observer: IntersectionObserver | null = null
 onMounted(() => {
@@ -25,10 +39,12 @@ onMounted(() => {
     { rootMargin: '0px 0px 0px 0px', threshold: [0, 1] }
   )
   observer.observe(sentinel.value)
+  document.addEventListener('click', onDocumentClick)
 })
 
 onBeforeUnmount(() => {
   observer?.disconnect()
+  document.removeEventListener('click', onDocumentClick)
 })
 </script>
 
@@ -54,10 +70,35 @@ onBeforeUnmount(() => {
           <Link :href="route('contact')" class="text-gray-300 hover:text-sky-500">Contact</Link>
         </nav>
 
-        <!-- Right: Auth Links -->
-        <div class="hidden sm:flex items-center justify-end gap-3 text-sm">
-          <Link :href="route('login')" class="text-gray-300 hover:text-sky-500">Login</Link>
-          <Link :href="route('signup')" class="btn-primary px-4 py-2 rounded">Sign Up</Link>
+        <!-- Right: Auth Links / User Dropdown -->
+        <div class="hidden sm:flex items-center justify-end gap-3 text-sm relative">
+          <template v-if="authUser">
+            <button id="user-menu-button" type="button" @click="menuOpen = !menuOpen" class="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 focus:outline-none">
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white">
+                <i class="fa-regular fa-user"></i>
+              </span>
+              <span class="hidden md:inline text-gray-200">{{ authUser.name ?? (authUser.first_name + ' ' + authUser.last_name) }}</span>
+              <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+            </button>
+            <div id="user-menu" v-show="menuOpen" class="absolute right-0 top-12 w-48 bg-white text-gray-700 rounded-md shadow border border-gray-200 py-1 z-50">
+              <Link :href="route('profile.edit')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                <i class="fa-regular fa-id-card w-4 text-gray-500"></i>
+                <span>Profile</span>
+              </Link>
+              <Link :href="route('appearance')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                <i class="fa-solid fa-gear w-4 text-gray-500"></i>
+                <span>Settings</span>
+              </Link>
+              <Link :href="route('logout')" method="post" as="button" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                <i class="fa-solid fa-arrow-right-from-bracket w-4 text-gray-500"></i>
+                <span>Logout</span>
+              </Link>
+            </div>
+          </template>
+          <template v-else>
+            <Link :href="route('login')" class="text-gray-300 hover:text-sky-500">Login</Link>
+            <Link :href="route('signup')" class="btn-primary px-4 py-2 rounded">Sign Up</Link>
+          </template>
         </div>
       </div>
       <div v-if="breadcrumbs && breadcrumbs.length" class="border-t border-gray-100 bg-gray-50">

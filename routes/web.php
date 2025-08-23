@@ -1,33 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Http\Controllers\Admin\PlanController as AdminPlanController;
-use App\Http\Controllers\PlanController as PublicPlanController;
-use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\ImageController;
-use App\Http\Controllers\BillingController;
-use App\Http\Controllers\Admin\UsersController;
-use App\Http\Controllers\Admin\ReportsController;
-use App\Http\Controllers\Marketing\PagesController;
 
-// Marketing site
-Route::get('/', [PagesController::class, 'home'])->name('home');
-Route::get('/features', [PagesController::class, 'features'])->name('features');
-Route::get('/about-us', [PagesController::class, 'about'])->name('about');
-Route::get('/docs', [PagesController::class, 'docs'])->name('docs');
-Route::get('/contact', [PagesController::class, 'contact'])->name('contact');
-Route::post('/contact', [PagesController::class, 'submitContact'])->name('contact.submit');
-Route::get('/privacy-policy', [PagesController::class, 'privacy'])->name('privacy');
-Route::get('/terms-of-service', [PagesController::class, 'terms'])->name('terms');
-Route::get('/signup', [PagesController::class, 'signup'])->name('signup');
-// Keep existing public plans listing; add a convenience alias
-Route::get('/pricing', function () {
-    return redirect()->route('plans.index');
-})->name('pricing');
+// Marketing and public routes moved to routes/frontend.php
 
 Route::get('dashboard', function () {
-    $user = auth()->user();
+    $user = Auth::user();
     $images = [];
     $usage = null;
     if ($user) {
@@ -55,23 +35,12 @@ Route::get('dashboard', function () {
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
-// Admin routes
-Route::prefix('admin')
-    ->name('admin.')
-    ->middleware(['auth', 'role:admin'])
-    ->group(function () {
-        Route::resource('plans', AdminPlanController::class);
-        Route::get('users', [UsersController::class, 'index'])->name('users.index');
-        Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
-    });
+// Frontend (customer) routes
+require __DIR__.'/frontend.php';
 
-// Public plans listing
-Route::get('/plans', [PublicPlanController::class, 'index'])->name('plans.index');
+// Admin and Super Admin routes
+require __DIR__.'/admin.php';
 
-// Subscription routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
-    Route::post('/subscription', [SubscriptionController::class, 'store'])->name('subscription.store');
-    Route::post('/images', [ImageController::class, 'store'])->name('images.store');
-    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-});
+// Public plans listing moved to routes/frontend.php
+
+// Subscription and other authenticated customer routes moved to routes/frontend.php

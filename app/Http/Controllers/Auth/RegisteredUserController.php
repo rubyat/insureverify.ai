@@ -42,6 +42,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Assign default role as subscriber (front-end customer)
+        $user->assignRole('subscriber');
+
         event(new Registered($user));
 
         Auth::login($user);
