@@ -7,13 +7,27 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/app' },
-  { title: 'Upload', href: '/app/upload' },
+  { title: 'Verification', href: '/app/verification' },
   { title: 'Library', href: '/app/library' },
   { title: 'Usage & Limits', href: '/app/usage' },
   { title: 'Billing', href: '/app/billing' },
   { title: 'Notifications', href: '/app/notifications' },
   { title: 'Support', href: '/app/support' },
-  { title: 'Settings', href: '/settings/profile' },
+];
+
+const sidebarNavItemsSettings: NavItem[] = [
+    {
+        title: 'Profile',
+        href: '/settings/profile',
+    },
+    {
+        title: 'Password',
+        href: '/settings/password',
+    },
+    // {
+    //     title: 'Appearance',
+    //     href: '/settings/appearance',
+    // },
 ];
 
 const page = usePage();
@@ -22,13 +36,30 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
 <template>
   <div class="px-4 py-6">
-    <Heading title="Workspace" description="Manage your uploads, billing, and account" />
+
 
     <div class="flex flex-col lg:flex-row lg:space-x-12">
       <aside class="w-full max-w-xl lg:w-56">
-        <nav class="flex flex-col space-y-1 space-x-0">
+        <Heading marginClass="mb-2" title="Workspace" description="Manage your uploads, billing, and account" />
+        <nav class="flex flex-col space-y-1 space-x-0 mb-8">
           <Button
             v-for="item in sidebarNavItems"
+            :key="item.href"
+            variant="ghost"
+            :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+            as-child
+          >
+            <Link :href="item.href">
+              {{ item.title }}
+            </Link>
+          </Button>
+        </nav>
+
+
+        <Heading marginClass="mb-2" title="Settings" description="Manage your profile and account settings" />
+        <nav class="flex flex-col space-y-1 space-x-0">
+          <Button
+            v-for="item in sidebarNavItemsSettings"
             :key="item.href"
             variant="ghost"
             :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"

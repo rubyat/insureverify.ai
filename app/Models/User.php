@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use Laravel\Cashier\Billable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, Billable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -59,11 +58,6 @@ class User extends Authenticatable
         return $this->hasMany(Image::class);
     }
 
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(\Laravel\Cashier\Subscription::class);
-    }
-
     /**
      * A user can have many saved cards.
      */
@@ -73,20 +67,55 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the Plan model corresponding to the user's active subscription price.
+     * A user has many subscriptions.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Compatibility helper similar to Cashier's API.
+     * We only support a single subscription, so the name is ignored.
+     */
+    public function subscription(string $name = 'default'): ?Subscription
+    {
+        return $this->activeSubscription();
+    }
+
+    /**
+     * Compatibility helper: return true if user has an active or trialing subscription.
+     */
+    public function subscribed(string $name = 'default'): bool
+    {
+        return (bool) $this->activeSubscription();
+    }
+
+    /**
+     * A user has many invoices through subscriptions.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Return the user's current active (or trialing) subscription.
+     */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->whereIn('status', ['active', 'trialing'])
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Get the Plan model for the user's active subscription.
      */
     public function currentPlan(): ?Plan
     {
-        $subscription = $this->subscription('default');
-        if (! $subscription) {
-            return null;
-        }
-        if (! empty($subscription->plan_id)) {
-            return Plan::find($subscription->plan_id);
-        }
-        if ($subscription->stripe_price) {
-            return Plan::where('stripe_plan_id', $subscription->stripe_price)->first();
-        }
-        return null;
+        $subscription = $this->activeSubscription();
+        return $subscription ? Plan::find($subscription->plan_id) : null;
     }
 }

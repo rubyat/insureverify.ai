@@ -8,6 +8,7 @@ use App\Http\Controllers\Subscribed\PagesController;
 use App\Http\Controllers\Subscribed\AuthController as MarketingAuthController;
 use App\Http\Controllers\PlanController as PublicPlanController;
 use App\Http\Controllers\App\PagesController as AppPagesController;
+use App\Http\Controllers\App\VerificationController as AppVerificationController;
 
 // Public marketing site routes
 Route::get('/', [PagesController::class, 'home'])->name('home');
@@ -43,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [AppPagesController::class, 'dashboard'])->name('app.dashboard');
     Route::get('/upload', [AppPagesController::class, 'upload'])->name('app.upload');
+    Route::get('/verification', [AppVerificationController::class, 'index'])->name('app.verification');
+    Route::post('/verification/upload', [ImageController::class, 'store'])
+        ->name('app.verification.upload')
+        ->withoutMiddleware('verified');
     Route::get('/library', [AppPagesController::class, 'library'])->name('app.library');
     Route::get('/usage', [AppPagesController::class, 'usage'])->name('app.usage');
     Route::get('/billing', [AppPagesController::class, 'billing'])->name('app.billing');

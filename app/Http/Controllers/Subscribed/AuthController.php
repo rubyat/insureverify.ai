@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Subscribed;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserCard;
+use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\SubscriptionUsage;
+use App\Models\SubscriptionEvent;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Str;
@@ -93,8 +98,78 @@ class AuthController extends Controller
             }
         }
 
-        // Redirect to subscription with selected plan to complete checkout
-        return redirect()->route('subscription.show', ['plan' => $validated['plan']]);
+        // Create active subscription immediately (payment to be added later)
+        // Resolve selected plan by slug or ID
+        $plan = Plan::query()
+            ->where('slug', $validated['plan'])
+            ->orWhere('id', $validated['plan'])
+            ->firstOrFail();
+
+        DB::transaction(function () use ($user, $plan) {
+            $now = now();
+            $periodStart = $now;
+            $periodEnd = (clone $now)->addMonth();
+
+            $priceMonthlyCents = $plan->price !== null ? (int) round(((float) $plan->price) * 100) : 0;
+
+            // Create subscription with plan snapshots
+            $subscription = Subscription::create([
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'status' => 'active', // later: support trialing, etc.
+                'trial_ends_at' => null,
+                'current_period_start' => $periodStart,
+                'current_period_end' => $periodEnd,
+                'renews_at' => $periodEnd,
+                'canceled_at' => null,
+                'cancel_at_period_end' => false,
+                'currency' => 'USD',
+                'price_monthly_cents' => $priceMonthlyCents,
+                'included_verifications' => $plan->verifications_included,
+                'overage_price_per_unit_cents' => null,
+                'provider' => null,
+                'provider_customer_id' => null,
+                'provider_subscription_id' => null,
+                'metadata' => [
+                    'plan_slug' => $plan->slug,
+                    'created_via' => 'signup',
+                ],
+            ]);
+
+            // Initialize usage for current period
+            SubscriptionUsage::create([
+                'subscription_id' => $subscription->id,
+                'metric' => 'verifications',
+                'used' => 0,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'last_incremented_at' => null,
+            ]);
+
+            // Log subscription created event
+            SubscriptionEvent::create([
+                'subscription_id' => $subscription->id,
+                'actor_user_id' => $user->id,
+                'event' => 'created',
+                'old_values' => null,
+                'new_values' => [
+                    'status' => 'active',
+                    'plan_id' => $plan->id,
+                    'current_period_start' => $periodStart,
+                    'current_period_end' => $periodEnd,
+                ],
+                'metadata' => [
+                    'snapshot' => [
+                        'price_monthly_cents' => $priceMonthlyCents,
+                        'included_verifications' => $plan->verifications_included,
+                    ],
+                ],
+                'created_at' => now(),
+            ]);
+        });
+
+        // Redirect user to dashboard after successful signup + subscription creation
+        return redirect()->route('app.dashboard');
     }
 
     /**

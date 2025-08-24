@@ -2,7 +2,7 @@
 import InputError from '@/components/InputError.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
-import SettingsLayout from '@/layouts/customer/Layout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
