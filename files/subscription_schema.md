@@ -2,9 +2,7 @@ Subscriptions (Monthly) — Database Schema & Flow
 
 (for Laravel + Inertia + Vue; you already have users and plans)
 
-This spec makes the subscription layer production-ready with monthly billing, usage metering, invoicing, payments, and auditability. It’s intentionally Stripe/Cashier-friendly but provider-agnostic.
-
-Contents
+This spec makes the subscription layer production-ready with monthly billing, usage metering, invoicing, payments, and auditability. 
 
 Assumptions
 

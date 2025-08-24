@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 import CustomerLayout from '@/layouts/customer/Layout.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -26,7 +26,7 @@ const breadcrumbItems = [{ title: 'Dashboard', href: '/app' }];
       <div class="p-6 space-y-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 class="text-2xl font-semibold">Welcome back</h1>
-          <a :href="route('app.upload')" class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-white">+ Quick Upload</a>
+          <Link :href="route('app.verification')" class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-white">Start Verification</Link>
         </div>
 
         <div v-if="banners?.length" class="space-y-2">

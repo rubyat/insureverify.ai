@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Image;
 use App\Models\Subscription;
-use App\Models\SubscriptionUsage;
 use App\Models\SubscriptionEvent;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class ImageController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse
     {
 
 
@@ -37,7 +36,7 @@ class ImageController extends Controller
 
 
 
-        // Load active subscription per custom model (no Cashier)
+        // Load active subscription per custom model
         $subscription = Subscription::query()
             ->active()
             ->where('user_id', $user->id)
@@ -55,59 +54,40 @@ class ImageController extends Controller
 
 
         // Resolve or create current period usage row for metric 'verifications'
-        $periodStart = $subscription->current_period_start;
-        $periodEnd = $subscription->current_period_end;
-        $usage = SubscriptionUsage::firstOrCreate([
-            'subscription_id' => $subscription->id,
-            'metric' => 'verifications',
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd,
-        ], [
-            'used' => 0,
-        ]);
+        $usage = $subscription->resolveOrCreateCurrentPeriodUsage('verifications');
 
 
 
         // Enforce included_verifications (block when reached)
-        $included = $subscription->included_verifications; // may be null for unlimited
+        $included = $subscription->included_verifications ?? $subscription->includedVerificationLimit(); // may be null for unlimited
         if (! is_null($included) && $usage->used >= $included) {
             throw ValidationException::withMessages([
                 'image' => 'You have reached your verification limit for this billing period.',
             ]);
         }
 
-        // Store file to disk first (non-transactional)
-        $path = $request->file('image')->store('uploads/images', 'public');
+        // Store file to disk first (non-transactional) under per-user directory
+        $dir = 'uploads/images/user-' . $user->id;
+        if (!Storage::disk('public')->exists($dir)) {
+            Storage::disk('public')->makeDirectory($dir);
+        }
+        $path = $request->file('image')->store($dir, 'public');
 
-        // Persist DB updates atomically: increment usage, log event, create image record
-        DB::transaction(function () use ($user, $subscription, $usage, $path, $uploadFrom) {
-            $oldUsed = $usage->used;
-            $usage->used = $oldUsed + 1;
-            $usage->last_incremented_at = now();
-            $usage->save();
+        $image = Image::create([
+            'user_id' => $user->id,
+            'path' => $path,
+        ]);
 
-            SubscriptionEvent::create([
-                'subscription_id' => $subscription->id,
-                'actor_user_id' => $user->id,
-                'event' => 'usage_incremented',
-                'old_values' => ['used' => $oldUsed],
-                'new_values' => ['used' => $usage->used],
-                'metadata' => ['metric' => 'verifications', 'upload_from' => $uploadFrom],
-                'created_at' => now(),
-            ]);
-
-            Image::create([
-                'user_id' => $user->id,
-                'path' => $path,
-            ]);
-        });
-
-        // Flash success and uploaded image URL for client preview
-        $uploadedUrl = asset('storage/' . $path);
-        return back(status: 303)
-            ->with('success', 'Image uploaded successfully.')
-            ->with('uploaded_image_url', $uploadedUrl);
+        // Return JSON payload for SPA flow
+        return response()->json([
+            'success' => true,
+            'message' => 'Image uploaded successfully.',
+            'path' => $path,
+            'url' => asset('storage/' . $path),
+            // Back-compat keys
+            'main_path' => $path,
+            'asset_path' => asset('storage/' . $path),
+            'image_id' => $image?->id,
+        ]);
     }
 }
-
-

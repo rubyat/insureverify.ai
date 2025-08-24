@@ -15,6 +15,8 @@ withDefaults(defineProps<Props>(), {
 const stuck = ref(false)
 const sentinel = ref<HTMLElement | null>(null)
 const menuOpen = ref(false)
+const mobileNavOpen = ref(false)
+const mobileAccountOpen = ref(false)
 
 const page = usePage()
 const authUser = computed(() => (page.props as any)?.auth?.user)
@@ -46,6 +48,50 @@ onBeforeUnmount(() => {
   observer?.disconnect()
   document.removeEventListener('click', onDocumentClick)
 })
+
+// Smooth expand/collapse transitions for mobile panels
+function panelEnter(el: Element) {
+  const e = el as HTMLElement
+  e.style.height = '0px'
+  e.style.opacity = '0'
+  e.style.overflow = 'hidden'
+  // measure target height
+  const target = e.scrollHeight
+  // start transition
+  requestAnimationFrame(() => {
+    e.style.transition = 'height 220ms ease, opacity 220ms ease'
+    e.style.height = target + 'px'
+    e.style.opacity = '1'
+  })
+}
+
+function panelAfterEnter(el: Element) {
+  const e = el as HTMLElement
+  e.style.height = ''
+  e.style.opacity = ''
+  e.style.transition = ''
+  e.style.overflow = ''
+}
+
+function panelLeave(el: Element) {
+  const e = el as HTMLElement
+  e.style.overflow = 'hidden'
+  e.style.height = e.scrollHeight + 'px'
+  e.style.opacity = '1'
+  requestAnimationFrame(() => {
+    e.style.transition = 'height 180ms ease, opacity 180ms ease'
+    e.style.height = '0px'
+    e.style.opacity = '0'
+  })
+}
+
+function panelAfterLeave(el: Element) {
+  const e = el as HTMLElement
+  e.style.height = ''
+  e.style.opacity = ''
+  e.style.transition = ''
+  e.style.overflow = ''
+}
 </script>
 
 <template>
@@ -54,7 +100,7 @@ onBeforeUnmount(() => {
     <div ref="sentinel" class="h-0"></div>
     <!-- Header -->
     <header :class="['sticky top-0 z-50 bg-black text-gray-200 border-b', stuck ? 'border-sky-600' : 'border-transparent']">
-      <div class="container mx-auto h-16 grid grid-cols-3 items-center">
+      <div class="max-w-7xl mx-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <!-- Left: Logo -->
         <div class="flex items-center">
           <Link :href="route('home')" class="inline-flex items-center gap-2">
@@ -100,9 +146,85 @@ onBeforeUnmount(() => {
             <Link :href="route('signup')" class="btn-primary px-4 py-2 rounded">Sign Up</Link>
           </template>
         </div>
+
+        <!-- Mobile: Hamburger + Account -->
+        <div class="sm:hidden flex items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            aria-label="Open main menu"
+            @click="mobileNavOpen = !mobileNavOpen"
+          >
+            <svg v-if="!mobileNavOpen" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            aria-label="Open account menu"
+            @click="mobileAccountOpen = !mobileAccountOpen"
+          >
+
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white">
+                <i class="fa-regular fa-user"></i>
+            </span>
+          </button>
+        </div>
       </div>
+
+
+      <!-- Mobile: Collapsible Nav -->
+      <Transition :css="false" @enter="panelEnter" @after-enter="panelAfterEnter" @leave="panelLeave" @after-leave="panelAfterLeave">
+        <div v-show="mobileNavOpen" class="sm:hidden border-t border-white/10 bg-black/95 text-gray-200 transform">
+          <div class="px-4 py-3 space-y-2 text-sm">
+            <div class="grid grid-cols-1 gap-2 text-right">
+              <Link :href="route('home')" class="block px-3 py-2 rounded hover:bg-white/10">Home</Link>
+              <Link :href="route('features')" class="block px-3 py-2 rounded hover:bg-white/10">Features</Link>
+              <Link :href="route('plans.index')" class="block px-3 py-2 rounded hover:bg-white/10">Pricing</Link>
+              <Link :href="route('contact')" class="block px-3 py-2 rounded hover:bg-white/10">Contact</Link>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Mobile: Collapsible Account -->
+      <Transition :css="false" @enter="panelEnter" @after-enter="panelAfterEnter" @leave="panelLeave" @after-leave="panelAfterLeave">
+        <div v-show="mobileAccountOpen" class="sm:hidden border-t border-white/10 bg-black/95 text-gray-200 transform">
+          <div class="px-4 py-3 space-y-2 text-sm">
+            <template v-if="authUser">
+              <div class="grid grid-cols-1 gap-2 text-right">
+                <Link :href="route('app.dashboard')" class="block px-3 py-2 rounded hover:bg-white/10">
+                  <span class="flex items-center justify-end gap-2"><span>Dashboard</span><i class="fa-solid fa-gauge w-4"></i></span>
+                </Link>
+                <Link :href="route('profile.edit')" class="block px-3 py-2 rounded hover:bg-white/10">
+                  <span class="flex items-center justify-end gap-2"><span>Profile</span><i class="fa-regular fa-id-card w-4"></i></span>
+                </Link>
+                <Link :href="route('appearance')" class="block px-3 py-2 rounded hover:bg-white/10">
+                  <span class="flex items-center justify-end gap-2"><span>Settings</span><i class="fa-solid fa-gear w-4"></i></span>
+                </Link>
+                <Link :href="route('logout')" method="post" as="button" class="block w-full px-3 py-2 rounded hover:bg-white/10 text-right">
+                  <span class="flex items-center justify-end gap-2"><span>Logout</span><i class="fa-solid fa-arrow-right-from-bracket w-4"></i></span>
+                </Link>
+              </div>
+            </template>
+            <template v-else>
+              <div class="grid grid-cols-1 gap-2 text-right">
+                <Link :href="route('login')" class="block px-3 py-2 rounded hover:bg-white/10">
+                  <span class="flex items-center justify-end gap-2"><span>Login</span><i class="fa-solid fa-right-to-bracket w-4"></i></span>
+                </Link>
+                <Link :href="route('signup')" class="block px-3 py-2 rounded hover:bg-white/10">
+                  <span class="flex items-center justify-end gap-2"><span>Sign Up</span><i class="fa-solid fa-user-plus w-4"></i></span>
+                </Link>
+              </div>
+            </template>
+          </div>
+        </div>
+      </Transition>
+
+
       <div v-if="breadcrumbs && breadcrumbs.length" class="border-t border-gray-100 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-gray-600 flex items-center gap-2">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-sm text-gray-600 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
           <template v-for="(bc, idx) in breadcrumbs" :key="idx">
             <Link v-if="bc.href" :href="bc.href" class="hover:text-primary">{{ bc.title }}</Link>
             <span v-else>{{ bc.title }}</span>
@@ -118,14 +240,14 @@ onBeforeUnmount(() => {
     </main>
 
     <!-- Footer -->
-    <footer class="bg-black text-white py-16 px-6 md:px-12">
-      <div class="max-w-screen mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-16">
+    <footer class="bg-black text-white py-12 px-4 sm:py-16 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-10">
         <!-- Brand and description -->
-        <div class="max-w-screen">
+        <div class="max-w-xl">
           <Link :href="route('home')" class="text-2xl font-bold text-white inline-block">
             <img src="/images/logo.jpg" alt="InsureVerifyAI Logo" class="object-contain h-10 w-auto" />
           </Link>
-          <p class="text-gray-400 text-justify mt-4 text-sm">
+          <p class="text-gray-400 mt-4 text-sm leading-6">
             InsureVerifyAI helps car rental companies and mobility platforms instantly verify driving licenses and insurance. Our secure API reduces fraud, saves time, and speeds up renter approvals.
           </p>
         </div>
@@ -138,7 +260,7 @@ onBeforeUnmount(() => {
             <li><Link href="/pricing" class="hover:text-sky-500">Pricing</Link></li>
             <li><Link href="/docs" class="hover:text-sky-500">API Documentation</Link></li>
           </ul>
-          <div class="flex space-x-3 mt-6">
+          <div class="flex flex-wrap gap-3 mt-6">
             <a class="bg-white/10 hover:bg-sky-600 text-white p-2 rounded-full transition" aria-label="Facebook" href="https://facebook.com" target="_blank" rel="noopener noreferrer">
               <svg stroke="currentColor" fill="currentColor" viewBox="0 0 320 512" height="16" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg>
             </a>
@@ -170,7 +292,7 @@ onBeforeUnmount(() => {
           <p class="text-sm text-gray-400 mb-1">Business Hours: Monday to Friday, 9 AM – 6 PM (EST)</p>
         </div>
       </div>
-      <div class="mt-12 border-t border-gray-800 pt-6 text-center text-sm text-gray-500">© {{ new Date().getFullYear() }} InsureVerifyAI. All rights reserved.</div>
+      <div class="mt-10 sm:mt-12 border-t border-gray-800 pt-6 text-center text-xs sm:text-sm text-gray-500">© {{ new Date().getFullYear() }} InsureVerifyAI. All rights reserved.</div>
     </footer>
   </div>
 </template>

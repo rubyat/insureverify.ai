@@ -33,6 +33,17 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+// Admin navigation links
+const adminNavItems: NavItem[] = [
+  { title: 'Plans', href: '/admin/plans', icon: Folder },
+  { title: 'Users', href: '/admin/users', icon: Folder },
+  { title: 'Reports', href: '/admin/reports', icon: Folder },
+  { title: 'Subscribers', href: '/admin/subscribers', icon: Folder },
+  { title: 'Billing', href: '/admin/billing', icon: CreditCard },
+  { title: 'Usage', href: '/admin/usage', icon: Folder },
+  { title: 'Payments', href: '/admin/payments', icon: Folder },
+];
 </script>
 
 <template>
@@ -41,7 +52,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')">
+                        <Link :href="route('admin.dashboard')">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
@@ -52,7 +63,7 @@ const footerNavItems: NavItem[] = [
         <SidebarContent>
             <NavMain :items="mainNavItems" />
             <div class="mt-4">
-                <NavMain :items="[{ title: 'Admin: Plans', href: '/admin/plans', icon: Folder }, { title: 'Admin: Users', href: '/admin/users', icon: Folder }, { title: 'Admin: Reports', href: '/admin/reports', icon: Folder }]" />
+                <NavMain :items="adminNavItems" />
             </div>
         </SidebarContent>
 

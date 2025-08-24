@@ -49,5 +49,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed subscription plans
         $this->call(PlanSeeder::class);
+
+        // Seed a comprehensive demo subscriber with subscription, usage, invoices, items, payments, and events
+        $this->call(SubscriberDemoSeeder::class);
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Subscribed\AuthController as MarketingAuthController;
 use App\Http\Controllers\PlanController as PublicPlanController;
 use App\Http\Controllers\App\PagesController as AppPagesController;
 use App\Http\Controllers\App\VerificationController as AppVerificationController;
+use App\Http\Controllers\Cron\SubscriptionRenewalController;
 
 // Public marketing site routes
 Route::get('/', [PagesController::class, 'home'])->name('home');
@@ -48,9 +49,16 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     Route::post('/verification/upload', [ImageController::class, 'store'])
         ->name('app.verification.upload')
         ->withoutMiddleware('verified');
+    Route::post('/verification/verify', [AppVerificationController::class, 'verify'])
+        ->name('app.verification.verify')
+        ->withoutMiddleware('verified');
     Route::get('/library', [AppPagesController::class, 'library'])->name('app.library');
     Route::get('/usage', [AppPagesController::class, 'usage'])->name('app.usage');
     Route::get('/billing', [AppPagesController::class, 'billing'])->name('app.billing');
     Route::get('/notifications', [AppPagesController::class, 'notifications'])->name('app.notifications');
     Route::get('/support', [AppPagesController::class, 'support'])->name('app.support');
 });
+
+// Cron endpoint to process subscription renewals (token protected)
+Route::match(['GET','POST'], '/cron/subscriptions/renew', [SubscriptionRenewalController::class, 'run'])
+    ->name('cron.subscriptions.renew');

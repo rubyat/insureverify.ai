@@ -11,5 +11,9 @@ class InvoiceItem extends Model
         'invoice_id','type','description','quantity','unit_price_cents','amount_cents','metadata'
     ];
 
+    protected $casts = [
+        'metadata' => 'array',
+    ];
+
     public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
 }

@@ -4,22 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Subscription;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Cashier\Subscription;
 
 class ReportsController extends Controller
 {
     public function index(): Response
     {
-        $activeSubscriptions = Subscription::query()
-            ->where(function ($q) {
-                $q->where('anet_status', 'active')
-                  ->orWhere('stripe_status', 'active');
-            })
-            ->count();
+        // Using custom Subscription model and unified status column
+        $activeSubscriptions = Subscription::where('status', 'active')->count();
 
-        $subscribedUsers = User::all()->filter(fn(User $u) => $u->subscribed('default'))
+        $subscribedUsers = User::all()->filter(fn(User $u) => $u->subscribed())
             ->values()
             ->map(fn(User $u) => [
                 'id' => $u->id,

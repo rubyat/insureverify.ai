@@ -75,7 +75,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Compatibility helper similar to Cashier's API.
      * We only support a single subscription, so the name is ignored.
      */
     public function subscription(string $name = 'default'): ?Subscription
