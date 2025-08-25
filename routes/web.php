@@ -16,6 +16,9 @@ require __DIR__.'/frontend.php';
 // Admin and Super Admin routes
 require __DIR__.'/admin.php';
 
+// Filemanager routes
+require __DIR__.'/filemanager.php';
+
 // Public plans listing moved to routes/frontend.php
 
 // Subscription and other authenticated customer routes moved to routes/frontend.php

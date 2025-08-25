@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue'
+import { ref , computed } from 'vue'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import FileManagerModal from '@/components/admin/FileManagerModal.vue';
 
 defineProps<{ plans: any }>();
 
@@ -50,6 +51,21 @@ const formatLinkLabel = (label: string): string => {
   textarea.innerHTML = stripped
   return textarea.value
 }
+
+
+
+const open  = ref(false)
+const image = ref<string>('') // stores "catalog/…"
+
+const thumbW = 300
+const thumbH = 300
+
+const thumbSrc = computed(() =>
+  image.value
+    ? `/thumb/${thumbW}x${thumbH}/${encodeURIComponent(image.value)}`
+    : '/images/placeholder.png' // your placeholder
+)
+
 </script>
 
 <template>
@@ -68,6 +84,24 @@ const formatLinkLabel = (label: string): string => {
       </div>
 
       <div class="overflow-x-auto rounded-md border bg-white">
+
+        <div class="max-w-sm border rounded p-2">
+            <img :src="thumbSrc" class="w-full aspect-square object-contain bg-gray-50" />
+            <div class="grid grid-cols-2 gap-2 mt-2">
+            <button type="button" class="px-3 py-1.5 rounded-md bg-blue-600 text-white"
+                    @click="open = true">
+                Edit
+            </button>
+            <button type="button" class="px-3 py-1.5 rounded-md bg-yellow-500 text-white"
+                    @click="image = ''">
+                Clear
+            </button>
+            </div>
+            <input type="hidden" name="image" :value="image" id="input-image">
+            <FileManagerModal v-model="image" v-model:open="open" :thumbW="thumbW" :thumbH="thumbH" />
+        </div>
+
+
         <table class="min-w-full divide-y">
           <thead>
             <tr class="text-left">
