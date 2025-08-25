@@ -1,25 +1,35 @@
 <?php
 
 return [
-    // all paths are scoped to this disk
-    'disk' => 'public',
-    // root inside the disk (OpenCart uses image/catalog)
-    'base_dir' => 'catalog',
+    // Storage disk to use (must be configured in filesystems.php)
+    'disk' => env('FILEMANAGER_DISK', 'public'),
 
-    // UI page size
-    'per_page' => 16,
+    // Base directory inside the disk where images are stored
+    // Mirrors OpenCart's image/catalog structure: e.g., 'catalog'
+    'base' => env('FILEMANAGER_BASE', 'catalog'),
 
-    // size limit shown in UI (MB) and enforced server-side
-    'max_mb' => env('FILEMANAGER_MAX_MB', 10),
+    // Thumbnail/cache directory INSIDE the same disk, but OUTSIDE of the base directory
+    // e.g. if you want thumbs at storage/app/public/cache instead of storage/app/public/catalog/cache
+    'cache' => env('FILEMANAGER_CACHE', 'cache'),
 
-    // allowed extensions / mimes (parity with OpenCart)
-    'allowed_ext' => ['ico','gif','jpg','jpe','jpeg','png','webp'],
+    // Allowed file extensions and mimes for uploads
+    'allowed_extensions' => ['ico', 'gif', 'jpg', 'jpe', 'jpeg', 'png', 'webp'],
     'allowed_mimes' => [
-        'image/x-icon','image/jpeg','image/pjpeg',
-        'image/png','image/x-png','image/gif','image/webp',
+        'image/x-icon',
+        'image/jpeg',
+        'image/pjpeg',
+        'image/png',
+        'image/x-png',
+        'image/gif',
+        'image/webp',
     ],
 
-    // default thumb size (used by picker)
-    'thumb_w' => 300,
-    'thumb_h' => 300,
+    // Max upload size in KB per file
+    'max_upload_kb' => env('FILEMANAGER_MAX_UPLOAD_KB', 4096), // 4MB
+
+    // List page size
+    'limit' => 16,
+
+    // Default thumb size used by the list endpoint via ThumbController
+    'thumb_size' => env('FILEMANAGER_THUMB_SIZE', '300x300'),
 ];

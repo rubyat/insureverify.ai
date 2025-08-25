@@ -12,6 +12,7 @@ const form = useForm({
   stripe_plan_id: props.plan.stripe_plan_id,
   anet_plan_id: props.plan.anet_plan_id ?? '',
   price: props.plan.price,
+  image: props.plan.image ?? '',
   image_limit: props.plan.image_limit,
   description: props.plan.description ?? '',
   verifications_included: props.plan.verifications_included ?? '',
@@ -49,6 +50,7 @@ const submit = () => {
         v-model:stripe_plan_id="form.stripe_plan_id"
         v-model:anet_plan_id="form.anet_plan_id"
         v-model:price="form.price"
+        v-model:image="form.image"
         v-model:image_limit="form.image_limit"
         v-model:description="form.description"
         v-model:verifications_included="form.verifications_included"

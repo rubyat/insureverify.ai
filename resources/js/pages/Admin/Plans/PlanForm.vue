@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import ImagePicker from '@/components/filemanager/ImagePicker.vue'
 
 const props = defineProps<{
   errors?: Record<string, any>
@@ -14,6 +15,7 @@ const slug = defineModel<string>('slug')
 const stripe_plan_id = defineModel<string>('stripe_plan_id')
 const anet_plan_id = defineModel<string>('anet_plan_id')
 const price = defineModel<string | number>('price')
+const image = defineModel<string>('image')
 const image_limit = defineModel<number>('image_limit')
 const description = defineModel<string>('description')
 const verifications_included = defineModel<string | number>('verifications_included')
@@ -92,6 +94,13 @@ watch(name, (val) => {
           <label class="block text-sm font-medium">Price</label>
           <input v-model="price" type="number" step="0.01" class="mt-1 w-full rounded border px-3 py-2" />
           <div v-if="props.errors?.price" class="text-sm text-red-600">{{ props.errors.price }}</div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Image</label>
+          <div class="mt-1">
+            <ImagePicker name="image" v-model="image" :baseUrl="'/storage'" :placeholder="''" />
+          </div>
+          <div v-if="props.errors?.image" class="text-sm text-red-600">{{ props.errors.image }}</div>
         </div>
         <div>
           <label class="block text-sm font-medium">Image Limit</label>
