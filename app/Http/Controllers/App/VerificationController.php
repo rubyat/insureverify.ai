@@ -35,7 +35,7 @@ class VerificationController
             'cycleResetDate' => $cycleResetDate,
             'queue' => [],
             'atLimit' => $atLimit,
-            'upgradeUrl' => route('plans.index'),
+            'upgradeUrl' => route('app.upgrade'),
         ]);
     }
 

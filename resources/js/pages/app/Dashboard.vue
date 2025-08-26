@@ -53,11 +53,11 @@ const breadcrumbItems = [{ title: 'Dashboard', href: '/app' }];
             <div class="mt-2 text-sm text-muted-foreground">Current</div>
             <div class="text-xl font-semibold">{{ props.plan.name }}</div>
             <div class="text-sm">${{ props.plan.price.toFixed(2) }}/mo</div>
-            <a :href="props.plan.upgradeUrl" class="mt-3 inline-flex rounded-md border px-3 py-2 text-sm">Upgrade</a>
+            <Link :href="props.plan.upgradeUrl" class="mt-3 inline-flex rounded-md border px-3 py-2 text-sm">Upgrade</Link>
           </div>
         </div>
 
-        <div class="rounded border p-4">
+        <div class="rounded border p-4 hidden">
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold">Recent uploads</h2>
             <a :href="route('app.library')" class="text-sm text-primary">View all</a>

@@ -8,6 +8,8 @@ use App\Http\Controllers\Subscribed\PagesController;
 use App\Http\Controllers\Subscribed\AuthController as MarketingAuthController;
 use App\Http\Controllers\PlanController as PublicPlanController;
 use App\Http\Controllers\App\PagesController as AppPagesController;
+use App\Http\Controllers\App\BillingController as AppBillingController;
+use App\Http\Controllers\App\UpgradeController as AppUpgradeController;
 use App\Http\Controllers\App\VerificationController as AppVerificationController;
 use App\Http\Controllers\Cron\SubscriptionRenewalController;
 
@@ -20,6 +22,7 @@ Route::get('/contact', [PagesController::class, 'contact'])->name('contact');
 Route::post('/contact', [PagesController::class, 'submitContact'])->name('contact.submit');
 Route::get('/privacy-policy', [PagesController::class, 'privacy'])->name('privacy');
 Route::get('/terms-of-service', [PagesController::class, 'terms'])->name('terms');
+Route::get('/faq', [PagesController::class, 'faq'])->name('faq');
 // Signup routes handled by Marketing AuthController
 Route::get('/signup', [MarketingAuthController::class, 'showSignup'])->name('signup');
 Route::post('/signup', [MarketingAuthController::class, 'signup'])->name('signup.store');
@@ -54,9 +57,15 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         ->withoutMiddleware('verified');
     Route::get('/library', [AppPagesController::class, 'library'])->name('app.library');
     Route::get('/usage', [AppPagesController::class, 'usage'])->name('app.usage');
-    Route::get('/billing', [AppPagesController::class, 'billing'])->name('app.billing');
+    // Billing pages and card management
+    Route::get('/billing', [AppBillingController::class, 'index'])->name('app.billing');
+    Route::post('/billing/cards', [AppBillingController::class, 'storeCard'])->name('app.billing.cards.store');
+    Route::post('/billing/cards/{card}/default', [AppBillingController::class, 'makeDefault'])->name('app.billing.cards.default');
+    Route::delete('/billing/cards/{card}', [AppBillingController::class, 'destroyCard'])->name('app.billing.cards.destroy');
     Route::get('/notifications', [AppPagesController::class, 'notifications'])->name('app.notifications');
     Route::get('/support', [AppPagesController::class, 'support'])->name('app.support');
+    Route::get('/upgrade', [AppUpgradeController::class, 'index'])->name('app.upgrade');
+    Route::post('/upgrade', [AppUpgradeController::class, 'switch'])->name('app.upgrade.switch');
 });
 
 // Cron endpoint to process subscription renewals (token protected)

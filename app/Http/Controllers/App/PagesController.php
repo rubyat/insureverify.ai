@@ -80,7 +80,7 @@ class PagesController extends Controller
             'plan' => [
                 'name' => $plan?->name ?? '—',
                 'price' => $plan?->price ? (float) $plan->price : 0.0,
-                'upgradeUrl' => route('plans.index'),
+                'upgradeUrl' => route('app.upgrade'),
             ],
             'recentUploads' => $recentUploads,
             'banners' => $banners,
@@ -94,7 +94,7 @@ class PagesController extends Controller
             'cycleResetDate' => now()->addDays(12)->toDateString(),
             'queue' => [],
             'atLimit' => false,
-            'upgradeUrl' => route('plans.index'),
+            'upgradeUrl' => route('app.upgrade'),
         ]);
     }
 
@@ -165,47 +165,7 @@ class PagesController extends Controller
         ]);
     }
 
-    public function billing(Request $request): Response
-    {
-        $user = $request->user();
-        $subscription = $user?->activeSubscription();
-        $plan = $user?->currentPlan();
 
-        $currentPlan = [
-            'name' => $plan?->name ?? '—',
-            'price' => $plan?->price ? (float) $plan->price : 0.0,
-            'renewalDate' => $subscription?->renews_at?->toDateString() ?? $subscription?->current_period_end?->toDateString() ?? now()->addMonth()->toDateString(),
-        ];
-
-        // Recent invoices (up to 12)
-        $invoices = $user
-            ? $user->invoices()->with('payments')->orderByDesc('issued_at')->orderByDesc('id')->limit(12)->get()->map(function (Invoice $inv) {
-                return [
-                    'id' => $inv->number,
-                    'date' => ($inv->issued_at ?? $inv->created_at)?->toDateString(),
-                    'amount' => (float) ($inv->total_cents / 100),
-                    'url' => '#',
-                ];
-            })
-            : collect();
-
-        // Default payment method (UserCard)
-        $card = $user?->cards()->where('is_default', true)->first() ?? $user?->cards()->latest()->first();
-        $paymentMethod = [
-            'brand' => $card->brand ?? '—',
-            'last4' => $card->last4 ?? '----',
-            'exp' => isset($card)
-                ? str_pad((string) $card->exp_month, 2, '0', STR_PAD_LEFT) . '/' . substr((string) $card->exp_year, -2)
-                : '—',
-        ];
-
-        return Inertia::render('app/Billing', [
-            'currentPlan' => $currentPlan,
-            'invoices' => $invoices,
-            'paymentMethod' => $paymentMethod,
-            'errors' => [],
-        ]);
-    }
 
     public function notifications(Request $request): Response
     {

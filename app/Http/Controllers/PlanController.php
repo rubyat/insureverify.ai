@@ -13,7 +13,15 @@ class PlanController extends Controller
      */
     public function index(): Response
     {
-        $plans = Plan::query()->orderBy('price')->get();
+        $plans = Plan::query()
+            ->where('is_active', true)
+            ->where('visibility', 'Public')
+            ->orderBy('sort_order')
+            ->orderBy('price')
+            ->get([
+                'id', 'name', 'slug', 'price', 'image_limit', 'description',
+                'verifications_included', 'features', 'cta_label', 'cta_route', 'anet_plan_id'
+            ]);
 
         return Inertia::render('Plans', [
             'plans' => $plans,

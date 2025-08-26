@@ -43,6 +43,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Billing', href: '/admin/billing', icon: CreditCard },
   { title: 'Usage', href: '/admin/usage', icon: Folder },
   { title: 'Payments', href: '/admin/payments', icon: Folder },
+  { title: 'Settings', href: '/admin/settings', icon: Folder },
 ];
 </script>
 

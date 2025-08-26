@@ -6,6 +6,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\SettingsSeeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -52,5 +53,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed a comprehensive demo subscriber with subscription, usage, invoices, items, payments, and events
         $this->call(SubscriberDemoSeeder::class);
+
+        // Seed application settings
+        $this->call(SettingsSeeder::class);
     }
 }

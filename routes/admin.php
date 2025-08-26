@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BillingController as AdminBillingController;
 use App\Http\Controllers\Admin\UsageController as AdminUsageController;
 use App\Http\Controllers\Admin\PaymentsController as AdminPaymentsController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SettingsController;
 
 // Admin routes, protected by admin role
 Route::prefix('admin')
@@ -36,6 +37,10 @@ Route::prefix('admin')
         // Payments
         Route::get('payments', [AdminPaymentsController::class, 'index'])->name('payments.index');
         Route::get('payments/{payment}', [AdminPaymentsController::class, 'show'])->name('payments.show');
+
+        // Settings
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings', [SettingsController::class, 'update'])->name('settings.update');
 
         // Super Admin only actions
         Route::middleware('role:super-admin')->group(function () {

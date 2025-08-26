@@ -3,22 +3,43 @@ import SiteLayout from '@/layouts/SiteLayout.vue'
 import { Link, Head } from '@inertiajs/vue3'
 
 const props = defineProps<{ plans?: Array<any> }>()
+
+// SEO meta for Home page
+const title = 'InsureVerifyAI – License & Insurance Verification'
+const description = 'Fast, secure, and scalable license & insurance verification API service.'
+const keywords = 'License,Insurance,InsureVerifyAI,API service.'
+
 </script>
 
 <template>
-  <Head title="Home" />
+  <Head :title="title">
+    <meta name="description" :content="description" />
+    <meta name="keywords" :content="keywords" />
+  </Head>
   <SiteLayout>
     <!-- Hero -->
-    <section class="relative min-h-[70vh] bg-cover bg-center flex items-center px-6 md:px-12" style="background-image:url('/images/hero-image.jpg')">
+    <section class="relative min-h-[60vh] md:min-h-0">
+      <!-- Responsive image: cover on mobile (absolute), auto height on desktop (static) -->
+      <img
+        src="/images/hero-image.jpg"
+        alt="InsureVerifyAI hero"
+        class="absolute inset-0 h-full w-full object-cover md:static md:w-full md:h-auto md:object-contain"
+      />
+
+      <!-- Dark overlay for readability on top of image -->
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="container mx-auto">
-        <div class="relative z-10 max-w-6xl">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-white max-w-3xl">Fast, Reliable License & Insurance Verification API for Car Rentals</h1>
-            <p class="text-white/90 text-lg max-w-2xl mt-4">Verify renters’ licenses and insurance in seconds. Reduce risk, save time, and boost ROI.</p>
-            <div class="mt-8 flex gap-3">
-            <Link :href="route('signup')" class="btn-primary px-6 py-3 rounded-md">Request API Access</Link>
-            <Link :href="route('plans.index')" class="px-6 py-3 rounded-md bg-white text-black hover:bg-gray-100">See Pricing</Link>
+
+      <!-- Text overlay, vertically centered -->
+      <div class="absolute inset-0 flex items-center px-6 md:px-12">
+        <div class="container mx-auto">
+          <div class="relative z-10 max-w-6xl">
+            <h1 class="text-2xl sm:text-5xl font-extrabold leading-tight text-white max-w-3xl">Fast, Reliable License & Insurance Verification API for Car Rentals</h1>
+            <p class="text-white/90 text-sm sm:text-lg max-w-2xl mt-3 sm:mt-4">Verify renters’ licenses and insurance in seconds. Reduce risk, save time, and boost ROI.</p>
+            <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+              <Link :href="route('signup')" class="btn-primary px-6 py-3 rounded-md text-center">Request API Access</Link>
+              <Link :href="route('plans.index')" class="px-6 py-3 rounded-md bg-white text-black hover:bg-gray-100 text-center">See Pricing</Link>
             </div>
+          </div>
         </div>
       </div>
     </section>
@@ -36,23 +57,14 @@ const props = defineProps<{ plans?: Array<any> }>()
         </div>
       </div>
 
-      <div class="container mx-auto max-w-5xl mt-16 grid md:grid-cols-2 gap-16">
+      <div class="container mx-auto  mt-16 grid md:grid-cols-2 gap-16">
         <!-- Identity & License Verification -->
         <div class="text-center">
           <div class="w-12 h-12 rounded-full bg-black text-white mx-auto flex items-center justify-center shadow">
             <i class="fa-solid fa-bolt text-lg"></i>
           </div>
           <h3 class="font-semibold mt-4">Identity & License Verification (Powered by AI + Biometric Tech)</h3>
-          <p class="text-sm text-foreground/70 mt-2 max-w-md mx-auto">We verify each renter using the same system trusted by CLEAR at airports. It scans their government-issued ID and facial biometrics to ensure the license is real and belongs to the person renting. This step also includes $1 million liability coverage in case of any verification errors — providing you with maximum protection.</p>
-        </div>
-
-        <!-- Real-Time Insurance Verification -->
-        <div class="text-center">
-          <div class="w-12 h-12 rounded-full bg-black text-white mx-auto flex items-center justify-center shadow">
-            <i class="fa-solid fa-shield text-lg"></i>
-          </div>
-          <h3 class="font-semibold mt-4">Real-Time Insurance Verification</h3>
-          <p class="text-sm text-foreground/70 mt-2 max-w-md mx-auto">Our AI automatically reads the declarations page (deck page) of a customer’s insurance policy and checks whether the policy is active and valid. No more manual uploads or follow-ups — it’s verified instantly.</p>
+          <p class="text-sm text-foreground/70 mt-2 mx-auto">We verify each renter using the same system trusted by CLEAR at airports. It scans their government-issued ID and facial biometrics to ensure the license is real and belongs to the person renting. This step also includes $1 million liability coverage in case of any verification errors — providing you with maximum protection.</p>
         </div>
 
         <!-- Recorded Insurance Confirmation -->
@@ -61,8 +73,19 @@ const props = defineProps<{ plans?: Array<any> }>()
             <i class="fa-solid fa-code text-lg"></i>
           </div>
           <h3 class="font-semibold mt-4">Bonus Add-On: Recorded Insurance Confirmation (Highly Recommended)</h3>
-          <p class="text-sm text-foreground/70 mt-2 max-w-md mx-auto">As an optional add-on, this feature records the insurance verification process, providing you with a copy of the recording that confirms the renter’s coverage is active and applies to the rental vehicle’s actual cash value. It’s one of the most powerful tools available for backing up your coverage in the event of a claim.</p>
+          <p class="text-sm text-foreground/70 mt-2 mx-auto">As an optional add-on, this feature records the insurance verification process, providing you with a copy of the recording that confirms the renter’s coverage is active and applies to the rental vehicle’s actual cash value. It’s one of the most powerful tools available for backing up your coverage in the event of a claim.</p>
         </div>
+
+        <!-- Real-Time Insurance Verification -->
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-black text-white mx-auto flex items-center justify-center shadow">
+            <i class="fa-solid fa-shield text-lg"></i>
+          </div>
+          <h3 class="font-semibold mt-4">Real-Time Insurance Verification</h3>
+          <p class="text-sm text-foreground/70 mt-2 mx-auto">Our AI automatically reads the declarations page (deck page) of a customer’s insurance policy and checks whether the policy is active and valid. No more manual uploads or follow-ups — it’s verified instantly.</p>
+        </div>
+
+
 
         <!-- Scalable Growth -->
         <div class="text-center">
@@ -70,7 +93,7 @@ const props = defineProps<{ plans?: Array<any> }>()
             <i class="fa-solid fa-chart-column text-lg"></i>
           </div>
           <h3 class="font-semibold mt-4">Scalable Growth</h3>
-          <p class="text-sm text-foreground/70 mt-2 max-w-md mx-auto">From small rental agencies to enterprise-level fleets, our API grows with you. Handle more bookings without hiring more staff.</p>
+          <p class="text-sm text-foreground/70 mt-2 mx-auto">From small rental agencies to enterprise-level fleets, our API grows with you. Handle more bookings without hiring more staff.</p>
         </div>
       </div>
     </section>
@@ -90,11 +113,11 @@ const props = defineProps<{ plans?: Array<any> }>()
           <p class="text-foreground/70 mt-2">Simple, transparent pricing that scales with your business</p>
         </div>
 
-        <div class="grid lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-5 gap-6 mx-auto">
           <div
             v-for="plan in props.plans ?? []"
             :key="plan.id"
-            class="border rounded-lg p-6 flex flex-col"
+            class="border rounded-lg p-6 flex flex-col bg-white transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.05] hover:shadow-xl hover:shadow-sky-900/10 hover:border-sky-200/70"
           >
             <h3 class="font-semibold text-lg">{{ plan.name }}</h3>
             <div class="mt-2 text-3xl font-extrabold tracking-tight">
@@ -123,7 +146,7 @@ const props = defineProps<{ plans?: Array<any> }>()
 
     <!-- Partners -->
     <section class="bg-white text-[#0a0a08] py-20 px-12">
-      <div class="max-w-screen mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <div class="container mx-auto grid md:grid-cols-2 gap-12 items-center">
         <!-- Left copy -->
         <div>
           <p class="text-sm uppercase tracking-wide text-[#0086ed] font-semibold">PARTNER. CLIENT. COMMUNITY.</p>

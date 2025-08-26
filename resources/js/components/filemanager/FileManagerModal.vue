@@ -88,7 +88,7 @@ const open = computed({
 const directory = ref(props.startDirectory || '')
 const filter = ref('')
 const page = ref(1)
-const limit = 16
+const limit = 12
 
 const directories = ref<FmDirectory[]>([])
 const images = ref<FmImage[]>([])

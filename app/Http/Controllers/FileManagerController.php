@@ -18,7 +18,7 @@ class FileManagerController extends Controller
         $directory = (string) $request->query('directory', '');
         $filter = (string) $request->query('filter_name', '');
         $page = (int) $request->query('page', 1);
-        $limit = (int) $request->query('limit', config('filemanager.limit', 16));
+        $limit = (int) $request->query('limit', config('filemanager.limit', 12));
 
         $data = $this->fm->list($directory, $filter, $page, $limit);
 

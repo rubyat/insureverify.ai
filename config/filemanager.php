@@ -28,7 +28,7 @@ return [
     'max_upload_kb' => env('FILEMANAGER_MAX_UPLOAD_KB', 4096), // 4MB
 
     // List page size
-    'limit' => 16,
+    'limit' => 12,
 
     // Default thumb size used by the list endpoint via ThumbController
     'thumb_size' => env('FILEMANAGER_THUMB_SIZE', '300x300'),

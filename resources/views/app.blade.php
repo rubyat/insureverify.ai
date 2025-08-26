@@ -31,10 +31,10 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        {!! \App\Library\Meta::render() !!}
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/favicon.png" sizes="any">
+        <link rel="icon" href="/favicon.png" type="image/png">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -47,11 +47,19 @@
             referrerpolicy="no-referrer"
         />
 
+        <link href="{{ url()->full() }}" rel="canonical" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+
+        {!! config('settings.header_script') !!}
+
         @routes
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        {!! config('settings.body_script') !!}
         @inertia
+        {!! config('settings.footer_script') !!}
     </body>
 </html>

@@ -1,19 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { Ref } from 'vue'
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
-import type { Editor, EditorConfig } from '@ckeditor/ckeditor5-core'
-
-type UploadConfig = EditorConfig & {
-  simpleUpload?: {
-    uploadUrl: string
-    headers?: Record<string, string>
-  }
-}
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const props = defineProps<{
   modelValue?: string
-  uploadUrl?: string | null
   placeholder?: string
   minHeight?: string
 }>()
@@ -24,25 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const data: Ref<string> = ref(props.modelValue ?? '')
-
-const csrf = document
-  .querySelector('meta[name="csrf-token"]')
-  ?.getAttribute('content') ?? ''
-
-const config: UploadConfig = {
-  placeholder: props.placeholder ?? '',
-  ...(props.uploadUrl
-    ? {
-        simpleUpload: {
-          uploadUrl: props.uploadUrl,
-          headers: {
-            'X-CSRF-TOKEN': csrf,
-            Accept: 'application/json',
-          },
-        },
-      }
-    : {}),
-}
+const minHeightStyle = computed(() => props.minHeight ?? '180px')
 
 watch(
   () => props.modelValue,
@@ -51,25 +25,51 @@ watch(
   }
 )
 
-const onChange = (...args: unknown[]) => {
-  const editor = args[1] as Editor
-  emit('update:modelValue', editor.getData())
+watch(
+  () => data.value,
+  (v) => {
+    emit('update:modelValue', v ?? '')
+  }
+)
+
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ script: 'sub' }, { script: 'super' }],
+    [{ indent: '-1' }, { indent: '+1' }],
+    [{ align: [] as string[] }],
+    ['blockquote', 'code-block'],
+    ['link', 'image'],
+    [{ color: [] as string[] }, { background: [] as string[] }],
+    ['clean'],
+  ],
 }
+
+const formats = [
+  'header', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block',
+  'list', 'bullet', 'script', 'indent', 'align', 'link', 'image', 'color', 'background'
+]
+
 const onReady = () => emit('ready')
 </script>
 
 <template>
-  <div class="ck-content-wrapper" :style="{ minHeight }">
-    <ckeditor
-      :editor="ClassicEditor"
-      v-model="data"
-      :config="config"
-      @change="onChange"
+  <div class="quill-wrapper">
+    <QuillEditor
+      v-model:content="data"
+      contentType="html"
+      theme="snow"
+      :modules="modules"
+      :formats="formats"
+      :placeholder="props.placeholder || ''"
       @ready="onReady"
+      :style="{ minHeight: minHeightStyle }"
     />
   </div>
 </template>
 
 <style>
-.ck-content-wrapper .ck-editor__editable_inline { min-height: 180px; }
+.quill-wrapper .ql-editor { min-height: 180px; }
 </style>

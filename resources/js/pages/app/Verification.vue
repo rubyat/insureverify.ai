@@ -208,7 +208,9 @@ function onDragLeave() {
           </form>
 
           <div v-if="form.errors.image" class="mt-3 text-sm text-red-600">{{ form.errors.image }}</div>
-          <div v-if="props.atLimit" class="mt-3 text-sm text-red-600">You've reached your quota. <a :href="upgradeUrl" class="underline">Upgrade your plan</a>.</div>
+          <div v-if="props.atLimit" class="mt-3 text-sm text-red-600">You've reached your quota.
+            <a :href="upgradeUrl" class="underline">Upgrade your plan</a>.
+        </div>
         </div>
 
         <!-- Preview and processing / result -->
