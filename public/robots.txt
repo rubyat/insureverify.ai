@@ -1,2 +1,43 @@
+
+# Allow AI-driven and traditional search engines to crawl public pages
+
+# Default rules for all crawlers
 User-agent: *
-Disallow:
+# Block sensitive Laravel paths
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /password
+Disallow: /api/
+Disallow: /vendor/
+Disallow: /storage/
+Disallow: /node_modules/
+Disallow: /tests/
+Disallow: /cache/
+Disallow: /nova/
+Disallow: /horizon/
+
+# Allow all other public pages
+Allow: /
+
+# Sitemap location for better crawling
+Sitemap: https://insureverify.ai/sitemap.xml
+
+# Explicit AI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: Gemini
+Allow: /
+
+User-agent: Claude
+Allow: /
+
+User-agent: Perplexity
+Allow: /
+
+User-agent: GLM
+Allow: /
+
+User-agent: DeepSeek
+Allow: /

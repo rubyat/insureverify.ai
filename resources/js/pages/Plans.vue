@@ -25,7 +25,7 @@ const keywords = 'Pricing,Plans,License verification,Insurance verification,API,
      <section class="bg-gray-100 py-20 px-6 md:px-12">
       <div class="container mx-auto">
         <div class="text-center mb-12">
-          <h2 class="text-3xl md:text-4xl font-bold">Pricing</h2>
+          <h1 class="text-3xl md:text-4xl font-bold">Pricing</h1>
           <p class="text-foreground/70 mt-2">Simple, transparent pricing that scales with your business</p>
         </div>
 
@@ -35,7 +35,7 @@ const keywords = 'Pricing,Plans,License verification,Insurance verification,API,
             :key="plan.id"
             class="border rounded-lg p-6 flex flex-col bg-white transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-[1.05] hover:shadow-xl hover:shadow-sky-900/10 hover:border-sky-200/70"
           >
-            <h3 class="font-semibold text-lg">{{ plan.name }}</h3>
+            <h2 class="font-semibold text-lg">{{ plan.name }}</h2>
             <div class="mt-2 text-3xl font-extrabold tracking-tight">
               <template v-if="plan.price !== null && plan.price !== undefined">
                 ${{ Number(plan.price).toFixed(0) }} <span class="text-base font-medium text-foreground/70">/month</span>
@@ -55,51 +55,6 @@ const keywords = 'Pricing,Plans,License verification,Insurance verification,API,
             <div class="mt-auto pt-8">
               <Link :href="route('plan.show', plan.slug)" class="btn-primary w-full text-center px-4 py-3 rounded">{{ plan.cta_label || 'Get Started' }}</Link>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pricing -->
-    <section id="pricing" class="bg-background py-16 px-6 md:px-12 hidden">
-      <div class="mx-auto max-w-screen text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-foreground mb-4">Pricing</h2>
-        <p class="text-gray-700 mb-12 max-w-2xl mx-auto">Simple, transparent pricing that scales with your business</p>
-
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <div
-            v-for="plan in props.plans"
-            :key="plan.id"
-            class="border border-black p-8 rounded-lg flex flex-col justify-between text-left"
-          >
-            <div>
-              <h3 class="text-xl font-semibold text-black mb-1">{{ plan.name }}</h3>
-              <div class="flex flex-col items-start mb-2">
-                <div class="flex items-baseline">
-                  <template v-if="plan.price !== null && plan.price !== undefined">
-                    <span class="text-3xl font-bold text-black">${{ Number(plan.price).toFixed(0) }}</span>
-                    <span class="text-sm text-gray-600 ml-2">/month</span>
-                  </template>
-                  <template v-else>
-                    <span class="text-3xl font-bold text-black">Custom Pricing</span>
-                  </template>
-                </div>
-                <span v-if="plan.verifications_included" class="text-sm text-gray-600 mt-1">{{ plan.verifications_included }} verifications included</span>
-              </div>
-              <p v-if="plan.description" class="text-sm text-gray-700 mb-4">{{ plan.description }}</p>
-              <ul class="text-gray-800 text-sm space-y-3">
-                <li v-for="(feat, idx) in (plan.features || [])" :key="idx" class="flex items-start">
-                  <span class="w-2 h-2 mt-2 mr-2 bg-black rounded-full"></span>
-                  <span>{{ feat }}</span>
-                </li>
-              </ul>
-            </div>
-            <Link
-              :href="route('plan.show', plan.slug)"
-              class="mt-8 inline-block bg-primary text-white py-2 px-4 rounded hover:opacity-90 transition text-center"
-            >
-              {{ plan.cta_label || 'Get Started' }}
-            </Link>
           </div>
         </div>
       </div>

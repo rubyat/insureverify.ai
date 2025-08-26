@@ -1,196 +1,146 @@
-Got it. Below is a compact, self-contained explanation that does not rely on your local file paths. I also included a practical database schema at the end.
 
-How the System Works
-Core Concepts
-Page: A CMS entity with title, content, slug, and status. A Page may point to a visual Template via template_id. Pages and their main fields are translatable.
-Template: A JSON-defined layout built from drag-and-drop Blocks. Templates are also translatable (separate title and 
-content
- per language).
-Block: A PHP class with:
-Metadata and settings (the “options” fed to the editor form).
-A 
-content(model)
- renderer for frontend HTML.
-A 
-preview(model)
- for live editor preview.
-Some blocks are containers (hold children), e.g., Root, Row, Column. Others are leaf/content blocks (e.g., Text).
-SEO: Pages expose an SEO form in admin. SEO entries are linked to the Page (per language when applicable) and rendered in the frontend head section.
-Admin Workflow
-Create or edit a Page:
-Set title, status, optional WYSIWYG content, featured image, etc.
-Fill SEO fields in the built-in SEO meta section.
-Click “Template Builder” to visually compose the page with blocks.
-Open Template Builder:
-If the Page has no Template, a Template is created and linked automatically.
-You enter the Live Editor (drag-and-drop + inline settings).
-Build with blocks:
-Pick blocks from the palette. Drag to the canvas/layers.
-Click a block to edit its settings (auto-generated form based on the block’s options).
-Save → persists the Template JSON.
-Result on frontend:
-If a Page has a Template, the Template is processed into HTML and rendered.
-If not, the Page falls back to its WYSIWYG content.
-Live Editor (Drag-and-Drop) Mechanics
-Block registry: All available blocks are discovered and registered at runtime from core modules, plugins, and the active theme.
-Block palette: Grouped by category (e.g., “Layout”, “Content”, “Theme”). Searchable.
-Canvas/layers: The template is a tree with a ROOT node as the root container.
-Selection & settings: Selecting a block shows a dynamic form auto-built from the block’s options (field types, defaults, labels).
-Preview: The editor posts the current node’s model to a preview endpoint; the block’s 
-preview()
- or 
-content()
- returns HTML for the iframe.
-Save: Persists the entire template JSON (the block graph).
-Template JSON Structure (V2)
-Nodes: Each node is { id, type, model, nodes[], parent, component, name }.
-ROOT: The root container with children referencing top-level layout blocks (typically Rows).
-Model: Arbitrary key-value data specific to the block (e.g., text content, classes, padding).
-Validation/enrichment: When loading/saving, the system validates block types, injects defaults from block settings, and can add preview HTML.
-Rendering Pipeline (Frontend)
-Page decides: If template_id exists, render the template. Otherwise render Page content.
-Template processing:
-Collect the block classes (registry).
-Parse the Template JSON into a tree.
-Depth-first render from ROOT. For each node:
-Find the block class by type.
-Call 
-content(model)
- to get HTML.
-Container blocks call 
-children()
- to render their descendants.
-SEO: The controller prepares SEO meta data (optionally language-aware) and passes it to your layout head.
-Block Design
-Base contract:
-getName()
-: human-readable name in the editor.
-getOptions()
-: metadata for the editor:
-Category and icon.
-is_container flag (whether it can have children).
-settings describing the form fields (types, labels, defaults).
-content(model)
-: returns HTML (often from a Blade view or template).
-preview(model)
-: optional optimized HTML for live editor.
-Container blocks: e.g., Root, Row, Column. They render structure and call 
-children()
- to render nested nodes.
-Content blocks: e.g., Text, Card, Hero, etc. They render actual content using their model fields.
-Registration:
-Core/module/theme providers register blocks by mapping a block key (type) to its PHP class.
-The registry is aggregated from all sources at runtime.
-Reuse:
-You can add the same block type multiple times with different model values.
-You can export/import entire Templates to reuse across environments.
-Duplicating a Page typically clones its Template and translations.
-SEO Integration
-In admin: The Page edit screen includes a standard SEO form (title, description, image, canonical, etc.).
-In frontend: The Page’s controller computes SEO meta for the current language and injects it into the layout (head tags).
-Cloning: When a Page is cloned, the system also clones associated Template and SEO entries.
-Sitemap: Pages are added to the sitemap via a helper integrated into the module provider.
-Extending the System
-Create a new block:
-Implement a PHP class extending the block base.
-Provide 
-getOptions()
- with fields and defaults.
-Implement 
-content(model)
- and a simple view template.
-Register the class in a provider so it appears in the palette.
-Theming:
-Themes can add or hide blocks via their provider and register theme-specific blocks (e.g., Subscribe, Features, Hero).
-Localization:
-Both Page and Template (title, content JSON) are translatable. The live editor supports switching languages during editing.
-Database Schema
-Note: Exact naming may vary, but these structures reflect how the system works. Use/adjust to your naming conventions. Includes soft deletes and common indexes.
+# 🚀 Template Builder System (Laravel + Inertia + Vue + TailwindCSS)
 
-sql
--- Pages (translatable and linkable to a Template)
-CREATE TABLE core_pages (
+## Core Concepts
+
+* **Page**
+
+  * Represents a CMS entry with title, slug, status, featured image, optional WYSIWYG fallback content.
+  * Each Page directly stores its **Template JSON** (no separate `template` table).
+  * Pages include SEO fields.
+
+* **Template JSON (Block Tree)**
+
+  * Drag-and-drop structured layout composed of blocks.
+  * Blocks define structure (`Row`, `Column`) or content (`Text`, `Hero`, `Card`).
+  * JSON format is hierarchical: `{ id, type, model, nodes[] }`.
+
+* **Block**
+
+  * A PHP class (registered at runtime).
+  * Provides metadata (`getOptions()`) to generate dynamic Vue forms.
+  * Provides frontend rendering (`content(model)`), and preview rendering for the editor.
+  * Supports both **container blocks** (Root, Row, Column) and **content blocks** (Text, Hero, etc.).
+
+* **SEO**
+
+  * Managed per-page (title, description, image, canonical URL).
+  * Injected into frontend `<head>` section.
+
+---
+
+## Admin Workflow
+
+1. **Create/Edit a Page**
+
+   * Fill in title, slug, featured image, and SEO fields.
+   * Open the **Visual Template Builder**.
+
+2. **Template Builder (Inertia + Vue UI)**
+
+   * Drag and drop blocks from a **palette** (Vue component).
+   * Edit block settings via **auto-generated Vue forms** (based on `getOptions()` metadata).
+   * Preview updates live inside an iframe or Vue preview component.
+   * Save → JSON block tree is persisted on the Page.
+
+3. **Frontend Rendering**
+
+   * Controller decides:
+
+     * If template JSON exists → render the block tree.
+     * Otherwise → render fallback WYSIWYG content.
+   * Rendering pipeline: depth-first traversal of JSON tree → call each block’s renderer → output Blade/Vue components.
+   * SEO meta is injected dynamically.
+
+---
+
+## Database Schema
+
+```sql
+-- Pages (includes both page content and template JSON)
+CREATE TABLE pages (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   slug VARCHAR(255) UNIQUE,
-  template_id BIGINT UNSIGNED NULL,
+  title VARCHAR(255) NOT NULL,
   status TINYINT UNSIGNED DEFAULT 1,          -- 1: published, 0: draft
   short_desc TEXT NULL,
   image_id BIGINT UNSIGNED NULL,              -- media reference
   custom_logo BIGINT UNSIGNED NULL,           -- media reference
   header_style VARCHAR(100) NULL,
-  show_template TINYINT UNSIGNED DEFAULT 1,   -- render template vs classic content
+  show_template TINYINT UNSIGNED DEFAULT 1,   -- render template vs fallback content
+  content LONGTEXT NULL,                      -- WYSIWYG fallback
+  template JSON NULL,                         -- block tree { id, type, model, nodes[] }
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
   deleted_at TIMESTAMP NULL,
-  INDEX idx_pages_template (template_id),
   INDEX idx_pages_status (status)
 );
 
--- Page translations (title/content per locale)
-CREATE TABLE core_page_translations (
+-- SEO (per page, language-neutral here for simplicity)
+CREATE TABLE seo (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  origin_id BIGINT UNSIGNED NOT NULL,         -- references core_pages.id
-  locale VARCHAR(10) NOT NULL,                -- e.g., en, fr, de
-  title VARCHAR(255) NOT NULL,
-  content LONGTEXT NULL,                      -- classic WYSIWYG fallback
-  short_desc TEXT NULL,
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  UNIQUE KEY uq_page_locale (origin_id, locale),
-  INDEX idx_page_trans_origin (origin_id),
-  INDEX idx_page_trans_locale (locale)
-);
-
--- Templates (translatable JSON layout)
-CREATE TABLE core_templates (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  type_id VARCHAR(100) NULL,                  -- optional categorization of template type
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  deleted_at TIMESTAMP NULL
-);
-
--- Template translations (title + content JSON per locale)
-CREATE TABLE core_template_translations (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  origin_id BIGINT UNSIGNED NOT NULL,         -- references core_templates.id
-  locale VARCHAR(10) NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  content JSON NULL,                          -- V2 node graph { id, type, model, nodes[], ... }
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  UNIQUE KEY uq_template_locale (origin_id, locale),
-  INDEX idx_template_trans_origin (origin_id),
-  INDEX idx_template_trans_locale (locale)
-);
-
--- SEO (generic SEO table usable by multiple object types, including pages)
-CREATE TABLE core_seo (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  object_model VARCHAR(100) NOT NULL,         -- e.g., 'page'
-  object_id BIGINT UNSIGNED NOT NULL,         -- target object id (e.g., core_pages.id)
-  locale VARCHAR(10) NULL,                    -- null = default/global, else per-locale
+  page_id BIGINT UNSIGNED NOT NULL,
   seo_title VARCHAR(255) NULL,
   seo_description TEXT NULL,
   seo_image_id BIGINT UNSIGNED NULL,          -- media reference
   canonical_url VARCHAR(500) NULL,
-  meta_json JSON NULL,                        -- for extra tags (og/twitter/etc.)
+  meta_json JSON NULL,                        -- extra tags (og/twitter/etc.)
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
-  INDEX idx_seo_target (object_model, object_id),
-  INDEX idx_seo_locale (locale)
+  INDEX idx_seo_page (page_id),
+  CONSTRAINT fk_seo_page FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
 );
+```
 
--- Optional: Foreign keys (enable if you need strict referential integrity)
--- ALTER TABLE core_pages
---   ADD CONSTRAINT fk_pages_template FOREIGN KEY (template_id) REFERENCES core_templates(id) ON DELETE SET NULL;
--- ALTER TABLE core_page_translations
---   ADD CONSTRAINT fk_page_trans_origin FOREIGN KEY (origin_id) REFERENCES core_pages(id) ON DELETE CASCADE;
--- ALTER TABLE core_template_translations
---   ADD CONSTRAINT fk_template_trans_origin FOREIGN KEY (origin_id) REFERENCES core_templates(id) ON DELETE CASCADE;
-Quick Summary
-Pages point to Templates; Templates are JSON block trees.
-The drag-and-drop builder edits that JSON via a block registry.
-Rendering walks the JSON and calls each block’s renderer.
-SEO is managed per-page (and optionally per-locale) and injected into the frontend head.
-You extend the system by adding new block classes, views, and registering them so they appear in the builder.
+---
+
+## Vue + Tailwind UI (Inertia Frontend)
+
+* **Page Editor**
+
+  * Vue form for title, slug, featured image, SEO fields.
+  * "Open Template Builder" button.
+
+* **Template Builder (Vue Component)**
+
+  * **Block Palette**: searchable list of registered blocks.
+  * **Canvas/Tree View**: JSON visualized as nested Vue components.
+  * **Block Settings Panel**: auto-generated form from block `options` metadata.
+  * **Live Preview**: iframe or Vue-based preview of rendered block.
+
+* **Styling**:
+
+  * TailwindCSS for layouts, forms, drag-and-drop UI.
+  * Grid utilities for Rows/Columns.
+  * Reusable Vue components for Text, Hero, Card, etc.
+
+---
+
+## Extending the System
+
+* **Add a new Block**
+
+  * Create PHP class extending BlockBase.
+  * Define `getOptions()` (form metadata).
+  * Implement `content(model)` (frontend rendering).
+  * Register it in a service provider.
+  * Vue auto-discovers it into the block palette.
+
+* **Themes**
+
+  * Register additional blocks (e.g., Hero, FeatureGrid).
+  * Hide/unregister blocks not needed for a theme.
+
+---
+
+## Quick Summary
+
+* Pages include **both metadata and a JSON template**.
+* JSON describes a **block tree** rendered by PHP + Vue.
+* SEO integrated per page.
+* Built for **Laravel + Inertia + Vue + TailwindCSS**.
+* Extensible by adding new block classes and Vue components.
+
+---
+
+Do you also want me to **write the Vue/Inertia template-builder component structure** (with Tailwind layout) so you get a ready-to-code starting point?

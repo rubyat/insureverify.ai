@@ -107,7 +107,7 @@ function panelAfterLeave(el: Element) {
         <!-- Left: Logo -->
         <div class="flex items-center">
           <Link :href="route('home')" class="inline-flex items-center gap-2">
-            <img src="/images/logo.jpg" alt="InsureVerifyAI" class="h-12 w-auto object-contain" />
+            <img src="/images/insureverify-ai-logo.png" alt="InsureVerifyAI" class="h-12 w-auto object-contain" />
           </Link>
         </div>
 
@@ -247,12 +247,12 @@ function panelAfterLeave(el: Element) {
     </main>
 
     <!-- Footer -->
-    <footer class="bg-black text-white py-12 sm:py-16 px-6 md:px-12">
+    <footer class="bg-black text-white pt-12 sm:pt-16 pb-6 sm:pb-6 px-6 md:px-12">
       <div class="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-10">
         <!-- Brand and description -->
         <div class="max-w-xl">
           <Link :href="route('home')" class="text-2xl font-bold text-white inline-block">
-            <img src="/images/logo.jpg" alt="InsureVerifyAI Logo" class="object-contain h-10 w-auto" />
+            <img src="/images/insureverify-ai-logo.png" alt="InsureVerifyAI Logo" class="object-contain h-10 w-auto" />
           </Link>
           <p class="text-gray-400 mt-4 text-sm leading-6">
             {{ settings.footer_description }}

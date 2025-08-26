@@ -18,28 +18,18 @@ const keywords = 'License,Insurance,InsureVerifyAI,API service.'
   </Head>
   <SiteLayout>
     <!-- Hero -->
-    <section class="relative min-h-[60vh] md:min-h-0">
-      <!-- Responsive image: cover on mobile (absolute), auto height on desktop (static) -->
-      <img
-        src="/images/hero-image.jpg"
-        alt="InsureVerifyAI hero"
-        class="absolute inset-0 h-full w-full object-cover md:static md:w-full md:h-auto md:object-contain"
-      />
 
-      <!-- Dark overlay for readability on top of image -->
+
+    <section class="relative h-[80vh] md:min-h-[95vh] md:max-h-[100vh] bg-cover bg-center flex items-center px-6 md:px-12" style="background-image:url('/images/hero-image.jpg')">
       <div class="absolute inset-0 bg-black/40"></div>
-
-      <!-- Text overlay, vertically centered -->
-      <div class="absolute inset-0 flex items-center px-6 md:px-12">
-        <div class="container mx-auto">
-          <div class="relative z-10 max-w-6xl">
-            <h1 class="text-2xl sm:text-5xl font-extrabold leading-tight text-white max-w-3xl">Fast, Reliable License & Insurance Verification API for Car Rentals</h1>
-            <p class="text-white/90 text-sm sm:text-lg max-w-2xl mt-3 sm:mt-4">Verify renters’ licenses and insurance in seconds. Reduce risk, save time, and boost ROI.</p>
-            <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
-              <Link :href="route('signup')" class="btn-primary px-6 py-3 rounded-md text-center">Request API Access</Link>
-              <Link :href="route('plans.index')" class="px-6 py-3 rounded-md bg-white text-black hover:bg-gray-100 text-center">See Pricing</Link>
+      <div class="container mx-auto">
+        <div class="relative z-10 max-w-6xl">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-white max-w-3xl">Fast, Reliable License & Insurance Verification API for Car Rentals</h1>
+            <p class="text-white/90 text-lg max-w-2xl mt-4">Verify renters’ licenses and insurance in seconds. Reduce risk, save time, and boost ROI.</p>
+            <div class="mt-8 flex gap-3">
+            <Link :href="route('signup')" class="btn-primary px-6 py-3 rounded-md">Request API Access</Link>
+            <Link :href="route('plans.index')" class="px-6 py-3 rounded-md bg-white text-black hover:bg-gray-100">See Pricing</Link>
             </div>
-          </div>
         </div>
       </div>
     </section>
@@ -51,7 +41,7 @@ const keywords = 'License,Insurance,InsureVerifyAI,API service.'
         <p class="text-foreground/70 mt-2">Smarter Verifications. Safer Rentals</p>
         <div class="inline-block mt-8">
           <div class="bg-sky-600 text-white rounded-md shadow-lg ring-1 ring-sky-700/40 px-6 py-4">
-            <p class="text-2xl md:text-3xl font-extrabold leading-tight">$3,000,000</p>
+            <p class="text-2xl md:text-3xl font-extrabold leading-tight">$300,000</p>
             <p class="text-[10px] md:text-xs uppercase tracking-wider text-white/90">Fraud-Related Theft Coverage</p>
           </div>
         </div>
@@ -64,7 +54,7 @@ const keywords = 'License,Insurance,InsureVerifyAI,API service.'
             <i class="fa-solid fa-bolt text-lg"></i>
           </div>
           <h3 class="font-semibold mt-4">Identity & License Verification (Powered by AI + Biometric Tech)</h3>
-          <p class="text-sm text-foreground/70 mt-2 mx-auto">We verify each renter using the same system trusted by CLEAR at airports. It scans their government-issued ID and facial biometrics to ensure the license is real and belongs to the person renting. This step also includes $1 million liability coverage in case of any verification errors — providing you with maximum protection.</p>
+          <p class="text-sm text-foreground/70 mt-2 mx-auto">We verify each renter using the same system trusted by CLEAR at airports. It scans their government-issued ID and facial biometrics to ensure the license is real and belongs to the person renting. This step also includes $300,000 liability coverage in case of any verification errors — providing you with maximum protection.</p>
         </div>
 
         <!-- Recorded Insurance Confirmation -->

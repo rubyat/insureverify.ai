@@ -31,11 +31,12 @@
             }
         </style>
 
-        {!! \App\Library\Meta::render() !!}
 
         <link rel="icon" href="/favicon.png" sizes="any">
         <link rel="icon" href="/favicon.png" type="image/png">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+        {!! \App\Library\Meta::render() !!}
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
