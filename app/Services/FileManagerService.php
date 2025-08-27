@@ -189,6 +189,11 @@ class FileManagerService
         return ['success' => 'Deleted'];
     }
 
+    public function resize(string $path, int $width, int $height): ?string
+    {
+        return $this->thumb($path, $width, $height);
+    }
+
     public function thumb(string $path, int $width, int $height): ?string
     {
         $full = $this->basePath($path);
@@ -210,6 +215,14 @@ class FileManagerService
         }
 
         return asset('storage/' .$thumbRel);
+    }
+
+    public function raw(string $path): ?string
+    {
+        $full = $this->basePath($path);
+        if (!$this->disk->exists($full)) return null;
+
+        return asset('storage/' .$full);
     }
 
     private function ensureDir(string $dir): void

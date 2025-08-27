@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Inertia::share('settings', [
+            'logo' => config('settings.logo'),
             'footer_description' => config('settings.footer_description'),
             'contact_email' => config('settings.contact_email'),
             'business_hours' => config('settings.business_hours'),

@@ -7,28 +7,38 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileManagerService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SettingsController extends Controller
 {
+
+    public function __construct(private FileManagerService $fm)
+    {
+    }
+
     public function index(Request $request): Response
     {
         $groups = Setting::query()
-            ->orderBy('code')
             ->orderBy('sort_order')
             ->get()
             ->groupBy('code')
             ->map(function ($items) {
                 return $items->map(function (Setting $s) {
+                    $value = $s->valueDecoded;
+                    $meta = $s->meta ?? [];
+                    if ($s->type === 'file' && is_string($value) && $value !== '') {
+                        // Generate a placeholder thumbnail for file settings
+                        $meta['placeholder'] = $this->fm->thumb($value, 300, 300);
+                    }
                     return [
                         'id' => $s->id,
                         'label' => $s->label,
                         'key' => $s->key,
                         'type' => $s->type,
-                        'value' => $s->valueDecoded,
-                        'meta' => $s->meta,
+                        'value' => $value,
+                        'meta' => $meta,
                         'sort_order' => $s->sort_order,
                     ];
                 })->values();
@@ -61,14 +71,6 @@ class SettingsController extends Controller
                 if (!$setting) continue;
 
                 if ($type === 'file') {
-                    if ($request->hasFile($setting->key)) {
-                        $file = $request->file($setting->key);
-                        $dir = Arr::get($setting->meta, 'directory', 'uploads/settings');
-                        $path = $file->store($dir, ['disk' => 'public']);
-                        $setting->value = $path; // store path
-                        $setting->save();
-                        continue;
-                    }
                     // Accept value from JSON payload (e.g., from ImagePicker)
                     $path = Arr::get($item, 'value');
                     if (is_string($path)) {

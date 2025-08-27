@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-xs border rounded overflow-hidden">
+  <div class="max-w-[200px] border rounded overflow-hidden">
     <img :src="thumbToShow" :alt="''" class="w-full object-contain" />
     <div class="grid grid-cols-2">
       <button type="button" class="px-3 py-2 text-sm rounded-none border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" @click="open = true">
@@ -45,7 +45,7 @@ const thumbToShow = computed(() => {
 function onPicked(p: { path: string; href: string; name: string; thumb?: string | null }) {
   console.log('p', p)
   previewThumb.value = p.thumb ?? undefined
-  emit('update:modelValue', props.baseUrl ? p.path : p.href)
+  emit('update:modelValue', props.baseUrl ? p.path : p.path)
 }
 
 function clearValue() {

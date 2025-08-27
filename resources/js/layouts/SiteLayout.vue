@@ -107,7 +107,7 @@ function panelAfterLeave(el: Element) {
         <!-- Left: Logo -->
         <div class="flex items-center">
           <Link :href="route('home')" class="inline-flex items-center gap-2">
-            <img src="/images/insureverify-ai-logo.png" alt="InsureVerifyAI" class="h-12 w-auto object-contain" />
+            <img :src="settings.logo || '/images/insureverify-ai-logo.png'" alt="InsureVerifyAI" class="h-12 w-auto object-contain" />
           </Link>
         </div>
 

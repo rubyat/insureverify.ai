@@ -32,9 +32,9 @@
         </style>
 
 
-        <link rel="icon" href="/favicon.png" sizes="any">
-        <link rel="icon" href="/favicon.png" type="image/png">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="{{ config('settings.favicon') }}" sizes="any">
+        <link rel="icon" href="{{ config('settings.favicon') }}" type="image/png">
+        <link rel="apple-touch-icon" href="{{ config('settings.favicon') }}">
 
         {!! \App\Library\Meta::render() !!}
 
