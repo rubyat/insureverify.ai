@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\UsageController as AdminUsageController;
 use App\Http\Controllers\Admin\PaymentsController as AdminPaymentsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\PageBuilder\PageController as AdminPageController;
+use App\Http\Controllers\PageBuilder\BuilderController;
 
 // Admin routes, protected by admin role
 Route::prefix('admin')
@@ -20,6 +22,14 @@ Route::prefix('admin')
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('plans', AdminPlanController::class);
+        // Pages CMS
+        Route::resource('pages', AdminPageController::class);
+        Route::get('pages/{page}/builder', [BuilderController::class, 'editor'])->name('pages.builder');
+        Route::post('pages/{page}/template', [BuilderController::class, 'save'])->name('pages.template.save');
+        Route::get('pages/{page}/live-preview', [BuilderController::class, 'livePreview'])->name('pages.live_preview');
+        Route::get('blocks', [BuilderController::class, 'blocks'])->name('blocks.index');
+        Route::post('blocks/preview', [BuilderController::class, 'preview'])->name('blocks.preview');
+        Route::post('blocks/render', [BuilderController::class, 'render'])->name('blocks.render');
         Route::get('users', [UsersController::class, 'index'])->name('users.index');
         Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
 

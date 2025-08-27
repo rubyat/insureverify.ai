@@ -32,7 +32,7 @@ import { Head } from '@inertiajs/vue3'
         <div class="relative">
           <!-- Main image -->
           <div class="relative ml-6 md:ml-10">
-            <img src="/images/about.png" alt="About InsureVerifyAI" class="relative z-10 rounded-2xl shadow-xl" />
+            <img src="/images/about-insureVerifyAI.jpg" alt="About InsureVerifyAI" class="relative z-10 rounded-2xl shadow-xl" />
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@ import { Head } from '@inertiajs/vue3'
         <!-- Left: Image -->
         <div class="relative order-1 md:order-none">
           <div class="relative">
-            <img src="/images/about-2.png" alt="About InsureVerifyAI" class="rounded-2xl shadow-xl" />
+            <img src="/images/verification.jpg" alt="About InsureVerifyAI" class="rounded-2xl shadow-xl" />
           </div>
         </div>
 
@@ -81,7 +81,7 @@ import { Head } from '@inertiajs/vue3'
 
     <!-- Rest of the about content -->
     <section class="py-8 px-6 md:px-12 bg-white">
-      <div class="container mx-auto prose prose-lg max-w-screen mb-16">
+      <div class="container mx-auto mb-16">
         <div class="mt-3 space-y-4">
           <h2 class="text-3xl md:text-5xl font-extrabold leading-tight text-slate-900">Why It Matters</h2>
           <p class="text-base md:text-lg text-slate-600">Manual checks are slow, error-prone, and costly. With <strong>InsureVerifyAI</strong>, verification is fully automated—you send the request, and results return in seconds. This helps you onboard more customers, reduce fraud risks, and ensure that only qualified drivers get behind the wheel.</p>

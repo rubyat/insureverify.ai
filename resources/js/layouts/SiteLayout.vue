@@ -261,7 +261,7 @@ function panelAfterLeave(el: Element) {
 
         <!-- Quick Links -->
         <div>
-          <h3 class="text-white font-semibold mb-4">Quick Links</h3>
+          <p class="text-white font-semibold mb-4">Quick Links</p>
           <ul class="space-y-2 text-sm text-gray-400">
             <li><Link href="/about-us" class="hover:text-sky-500">About us</Link></li>
             <li><Link href="/pricing" class="hover:text-sky-500">Pricing</Link></li>
@@ -288,7 +288,7 @@ function panelAfterLeave(el: Element) {
 
         <!-- Legal -->
         <div>
-          <h3 class="text-white font-semibold mb-4">Legal</h3>
+          <p class="text-white font-semibold mb-4">Legal</p>
           <ul class="space-y-2 text-sm text-gray-400">
             <li><Link href="/privacy-policy" class="hover:text-sky-500">Privacy Policy</Link></li>
             <li><Link href="/terms-of-service" class="hover:text-sky-500">Terms of Service</Link></li>
@@ -298,7 +298,7 @@ function panelAfterLeave(el: Element) {
 
         <!-- Contact -->
         <div>
-          <h3 class="text-white font-semibold mb-4">Contact Us</h3>
+          <p class="text-white font-semibold mb-4">Contact Us</p>
           <p v-if="settings.contact_email" class="text-sm text-gray-400 mb-1">Email: {{ settings.contact_email }}</p>
           <p v-if="settings.business_hours" class="text-sm text-gray-400 mb-1">Business Hours: {{ settings.business_hours }}</p>
         </div>
