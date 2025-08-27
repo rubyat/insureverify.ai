@@ -15,9 +15,10 @@ const nid = computed(() => props.nodeId ?? 'ROOT')
 // Registry mapping block type -> Vue component
 // You can expand this or convert to dynamic imports per block id
 const registry: Record<string, any> = {
-  root: defineAsyncComponent(() => import('../blocks/RootBlock.vue')),
-  text: defineAsyncComponent(() => import('../blocks/TextBlock.vue')),
-  call_to_action: defineAsyncComponent(() => import('../blocks/CallToActionBlock.vue')),
+  root: defineAsyncComponent(() => import('@/components/blocks/RootBlock.vue')),
+  text: defineAsyncComponent(() => import('@/components/blocks/TextBlock.vue')),
+  call_to_action: defineAsyncComponent(() => import('@/components/blocks/CallToActionBlock.vue')),
+  faq: defineAsyncComponent(() => import('@/components/blocks/FaqBlock.vue')),
 }
 
 function childrenOf(nodeId: string) {

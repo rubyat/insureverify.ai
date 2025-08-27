@@ -13,6 +13,7 @@ class Registry
         $this->register(new \App\Library\PageBuilder\Blocks\RootBlock());
         $this->register(new \App\Library\PageBuilder\Blocks\TextBlock());
         $this->register(new \App\Library\PageBuilder\Blocks\CallToActionBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\FaqBlock());
     }
 
     public function register(BlockBase $block): void

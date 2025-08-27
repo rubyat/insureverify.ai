@@ -15,6 +15,7 @@ const props = defineProps<{
 
 const catalog = ref<any[]>([])
 const tpl = ref<Record<string, any>>({ ...props.template })
+const showAddPanel = ref<boolean>(false)
 
 // Load blocks catalog
 fetch(props.blocksEndpoint)
@@ -46,6 +47,8 @@ function addBlock(blockId: string, parentId = 'ROOT') {
   parent.nodes ??= []
   parent.nodes.push(id)
   selectedNodeId.value = id
+  // After selecting a block to add, return to Layers view
+  showAddPanel.value = false
 }
 
 function removeSelected() {
@@ -191,33 +194,58 @@ async function openLivePreview() {
       <div class="grid grid-cols-12 gap-4 p-4">
         <!-- Left: Layers + Add -->
         <aside class="col-span-3 space-y-4">
-          <div class="rounded border bg-white">
+          <!-- Layers Panel -->
+          <div v-if="!showAddPanel" class="min-h-[70vh] rounded border bg-white flex flex-1 flex-col">
             <div class="px-3 py-2 font-medium border-b">Layers</div>
-            <div class="p-2 text-sm" @dragover="onLayerDragOver" @drop="onLayerDropEnd">
+            <div class="p-2 text-sm flex-1 space-y-2" @dragover="onLayerDragOver" @drop="onLayerDropEnd">
               <button class="hidden w-full text-left rounded px-2 py-1 hover:bg-gray-100" :class="{ 'bg-blue-50': selectedNodeId==='ROOT' }" @click="selectedNodeId='ROOT'">ROOT</button>
               <template v-for="id in renderTree('ROOT')" :key="id">
                 <button
-                  class="w-full text-left rounded px-2 py-1 hover:bg-gray-100"
-                  :class="{ 'bg-blue-50': selectedNodeId===id }"
+                  class="w-full text-left px-3 py-2 text-sm flex items-center justify-between rounded border transition-colors"
+                  :class="[
+                    selectedNodeId===id
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'
+                  ]"
                   @click="selectedNodeId=id"
                   draggable="true"
                   @dragstart="onLayerDragStart(id)"
                   @dragover="onLayerDragOver"
                   @drop="onLayerDrop(id)"
                 >
-                  {{ tpl[id]?.type }}
+                  <span class="truncate">{{ tpl[id]?.type }}</span>
+                  <i class="fa-solid fa-gear" :class="selectedNodeId===id ? 'text-white' : 'text-gray-500'"></i>
                 </button>
               </template>
             </div>
+            <div class="px-3 py-3 border-t">
+              <button class="w-full rounded bg-primary px-4 py-2 text-white text-sm" @click="showAddPanel = true">
+                + Add Block
+              </button>
+            </div>
           </div>
 
-          <div class="rounded border bg-white">
-            <div class="px-3 py-2 font-medium border-b">Add Block</div>
+          <!-- Add Block Panel -->
+          <div v-else class="rounded border bg-white">
+            <div class="px-3 py-2 font-medium border-b flex items-center gap-2">
+              <button class="text-sm" @click="showAddPanel = false">←</button>
+              <div>Add Block</div>
+            </div>
             <div class="p-2 space-y-3">
               <div v-for="g in catalog" :key="g.name">
                 <div class="px-2 text-xs uppercase text-gray-500">{{ g.name }}</div>
-                <div class="p-2 grid grid-cols-2 gap-2">
-                  <button v-for="b in g.items" :key="b.id" class="rounded border px-2 py-1 text-sm hover:bg-gray-50" @click="addBlock(b.id)">{{ b.name }}</button>
+                <div class="p-2 space-y-2">
+                  <button
+                    v-for="b in g.items"
+                    :key="b.id"
+                    class="w-full rounded border px-3 py-2 text-sm hover:bg-gray-50 flex items-center justify-between"
+                    @click="addBlock(b.id)"
+                  >
+                    <span class="truncate">{{ b.name }}</span>
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full border text-gray-600">
+                      <i class="fa-solid fa-plus text-xs"></i>
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>

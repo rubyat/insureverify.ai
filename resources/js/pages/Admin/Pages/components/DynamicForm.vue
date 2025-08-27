@@ -57,6 +57,46 @@ watch(block, (b) => {
           </div>
         </template>
 
+        <template v-else-if="s.type === 'listItem'">
+          <div class="mt-2 space-y-3">
+            <div
+              v-for="(it, idx) in (model[s.id] || [])"
+              :key="idx"
+              class="rounded border p-3 space-y-2"
+            >
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-600">Item {{ idx + 1 }}</div>
+                <button type="button" class="text-red-600 text-xs" @click="(model[s.id] = (model[s.id] || []).filter((_: any, i: number) => i !== idx))">Remove</button>
+              </div>
+
+              <template v-for="cs in (s.settings || [])" :key="cs.id">
+                <div>
+                  <label class="block text-xs">{{ cs.label || cs.id }}</label>
+                  <template v-if="cs.type === 'input'">
+                    <input v-model="it[cs.id]" :type="cs.inputType || 'text'" class="mt-1 w-full rounded border px-3 py-2" />
+                  </template>
+                  <template v-else-if="cs.type === 'editor'">
+                    <QuillEditor v-model:content="it[cs.id]" contentType="html" theme="snow" class="mt-1 bg-white" />
+                  </template>
+                  <template v-else>
+                    <input v-model="it[cs.id]" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+                  </template>
+                </div>
+              </template>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                class="rounded border px-3 py-1 text-sm"
+                @click="(() => { const arr = (model[s.id] = (model[s.id] || [])); const defaults: any = {}; (s.settings || []).forEach((cs: any) => { defaults[cs.id] = cs.std ?? ''; }); arr.push(defaults) })()"
+              >
+                + Add Item
+              </button>
+            </div>
+          </div>
+        </template>
+
         <template v-else>
           <input v-model="model[s.id]" type="text" class="mt-1 w-full rounded border px-3 py-2" />
         </template>
