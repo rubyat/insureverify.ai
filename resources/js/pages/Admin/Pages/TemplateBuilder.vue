@@ -11,6 +11,7 @@ const props = defineProps<{
   blocksEndpoint: string
   livePreviewEndpoint: string
   saveEndpoint: string
+  blocksThumbEndpoint: string
 }>()
 
 const catalog = ref<any[]>([])
@@ -160,7 +161,7 @@ async function openLivePreview() {
 <template>
   <Head :title="`${page.title} • Template Builder`" />
   <AppLayout :breadcrumbs="[
-    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
     { title: 'Pages', href: route('admin.pages.index') },
     { title: `${page.title} • Template Builder`, href: '#' },
   ]">
@@ -273,7 +274,7 @@ async function openLivePreview() {
               <button class="text-red-600 text-sm px-2" @click="removeSelected" :disabled="!selectedNode || selectedNodeId==='ROOT'">Remove</button>
             </div>
             <div class="p-3 space-y-3" v-if="selectedNode">
-              <DynamicForm :node="selectedNode" :block="findBlock(selectedNode.type)" @update:node="onUpdateNode" />
+              <DynamicForm :node="selectedNode" :block="findBlock(selectedNode.type)" :thumb-endpoint="props.blocksThumbEndpoint" @update:node="onUpdateNode" />
             </div>
             <div class="p-3 text-sm text-gray-500" v-else>Select a block to edit its settings.</div>
             <!-- Bottom Save Button -->

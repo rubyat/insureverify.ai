@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Dashboard', href: '/admin/dashboard' },
 ];
 
 const form = useForm<{ image: File | null }>({ image: null });

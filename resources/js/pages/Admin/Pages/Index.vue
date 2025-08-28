@@ -13,7 +13,7 @@ const performSearch = () => {
 
 <template>
   <Head title="Pages" />
-  <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Pages', href: route('admin.pages.index') }]">
+  <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/admin/dashboard' }, { title: 'Pages', href: route('admin.pages.index') }]">
     <div class="p-6 space-y-6 bg-gray-50">
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold">Pages</h1>

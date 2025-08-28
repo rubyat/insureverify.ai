@@ -7,7 +7,7 @@ import PageForm from './PageForm.vue'
 
 <template>
   <Head title="Create Page" />
-  <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/dashboard' }, { title: 'Pages', href: route('admin.pages.index') }, { title: 'Create', href: '#' }]">
+  <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/admin/dashboard' }, { title: 'Pages', href: route('admin.pages.index') }, { title: 'Create', href: '#' }]">
     <div class="p-6 space-y-6 bg-gray-50">
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold">Create Page</h1>

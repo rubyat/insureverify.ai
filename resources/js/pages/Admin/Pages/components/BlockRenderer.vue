@@ -19,6 +19,12 @@ const registry: Record<string, any> = {
   text: defineAsyncComponent(() => import('@/components/blocks/TextBlock.vue')),
   call_to_action: defineAsyncComponent(() => import('@/components/blocks/CallToActionBlock.vue')),
   faq: defineAsyncComponent(() => import('@/components/blocks/FaqBlock.vue')),
+  hero: defineAsyncComponent(() => import('@/components/blocks/HeroBlock.vue')),
+  why_choose: defineAsyncComponent(() => import('@/components/blocks/WhyChooseBlock.vue')),
+  cta_banner: defineAsyncComponent(() => import('@/components/blocks/CtaBannerBlock.vue')),
+  content_section: defineAsyncComponent(() => import('@/components/blocks/ContentSectionBlock.vue')),
+  pricing: defineAsyncComponent(() => import('@/components/blocks/PricingBlock.vue')),
+  contact: defineAsyncComponent(() => import('@/components/blocks/ContactBlock.vue')),
 }
 
 function childrenOf(nodeId: string) {

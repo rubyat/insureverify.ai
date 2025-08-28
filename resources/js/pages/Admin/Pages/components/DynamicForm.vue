@@ -1,21 +1,26 @@
 <script setup lang="ts">
-import { ref, watch, toRefs } from 'vue'
+import { ref, watch, toRefs, nextTick } from 'vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import ImagePicker from '@/components/filemanager/ImagePicker.vue'
 
-const props = defineProps<{ node: any; block: any }>()
+const props = defineProps<{ node: any; block: any; thumbEndpoint?: string }>()
 const { node, block } = toRefs(props)
 
 const emit = defineEmits<{ (e: 'update:node', payload: any): void }>()
 
 const model = ref<any>({ ...(node.value?.model || {}) })
+// Prevent feedback loop when parent replaces node and we mirror it into local model
+let syncingFromParent = false
 watch(model, (v) => {
+  if (syncingFromParent) return
   if (node.value) emit('update:node', { ...node.value, model: { ...v } })
 }, { deep: true })
 
 watch(node, (n) => {
+  syncingFromParent = true
   model.value = { ...(n?.model || {}) }
+  nextTick(() => { syncingFromParent = false })
 })
 
 function initField(s: any) {
@@ -29,6 +34,8 @@ function initField(s: any) {
 watch(block, (b) => {
   ;(b?.settings || []).forEach((s: any) => initField(s))
 }, { immediate: true, deep: true })
+
+
 </script>
 
 <template>
@@ -46,7 +53,10 @@ watch(block, (b) => {
         </template>
 
         <template v-else-if="s.type === 'uploader'">
-          <ImagePicker v-model="model[s.id]" />
+            <ImagePicker
+            v-model="model[s.id]"
+            :placeholder="model['placeholder'] || s.placeholder || '/storage/placeholder.png'"
+          />
         </template>
 
         <template v-else-if="s.type === 'radios'">

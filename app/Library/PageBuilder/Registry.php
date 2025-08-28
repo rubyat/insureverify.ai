@@ -14,6 +14,12 @@ class Registry
         $this->register(new \App\Library\PageBuilder\Blocks\TextBlock());
         $this->register(new \App\Library\PageBuilder\Blocks\CallToActionBlock());
         $this->register(new \App\Library\PageBuilder\Blocks\FaqBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\HeroBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\WhyChooseBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\CtaBannerBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\ContentSectionBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\PricingBlock());
+        $this->register(new \App\Library\PageBuilder\Blocks\ContactBlock());
     }
 
     public function register(BlockBase $block): void

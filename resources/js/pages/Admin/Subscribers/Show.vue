@@ -10,7 +10,7 @@ const props = defineProps<{
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Dashboard', href: '/admin/dashboard' },
   { title: 'Subscribers', href: '/admin/subscribers' },
   { title: props.user?.name || 'Subscriber', href: '#' },
 ]

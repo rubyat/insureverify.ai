@@ -6,7 +6,7 @@ import { type BreadcrumbItem } from '@/types';
 const props = defineProps<{ plan: any }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Dashboard', href: '/admin/dashboard' },
   { title: 'Plans', href: '/admin/plans' },
   { title: props.plan.name, href: `/admin/plans/${props.plan.id}` },
 ];

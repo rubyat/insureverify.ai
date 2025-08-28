@@ -30,6 +30,7 @@ Route::prefix('admin')
         Route::get('blocks', [BuilderController::class, 'blocks'])->name('blocks.index');
         Route::post('blocks/preview', [BuilderController::class, 'preview'])->name('blocks.preview');
         Route::post('blocks/render', [BuilderController::class, 'render'])->name('blocks.render');
+        Route::post('blocks/thumb', [BuilderController::class, 'thumb'])->name('blocks.thumb');
         Route::get('users', [UsersController::class, 'index'])->name('users.index');
         Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
 

@@ -8,7 +8,7 @@ import { type BreadcrumbItem } from '@/types';
 defineProps<{ plans: any }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Dashboard', href: '/admin/dashboard' },
   { title: 'Plans', href: '/admin/plans' },
 ];
 

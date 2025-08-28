@@ -2,9 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -205,6 +203,18 @@ class FileManagerService
             ? $this->cachePath()
             : $this->cachePath($subdir);
         $this->ensureDir($cacheDir);
+
+        if ($height === 0) {
+            // Use real filesystem path for getimagesize and guard against failures
+            $tmpIn = $this->disk->path($full);
+            $size = @getimagesize($tmpIn);
+            if (is_array($size) && isset($size[0], $size[1]) && $size[0] > 0) {
+                $height = (int) round($width * ($size[1] / $size[0]));
+            } else {
+                // Fallback to square to avoid errors
+                $height = $width;
+            }
+        }
 
         $ext = pathinfo($path, PATHINFO_EXTENSION);
         $nameNoExt = Str::beforeLast(basename($path), '.' . $ext);

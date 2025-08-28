@@ -18,7 +18,7 @@ const props = defineProps<{
   verifications_last7: Array<{ date: string; count: number }>;
 }>();
 
-const breadcrumbs = [{ title: 'Admin', href: '/admin' }, { title: 'Dashboard', href: '/admin/dashboard' }];
+const breadcrumbs = [{ title: 'Dashboard', href: '/admin/dashboard' }];
 
 const kpis = computed(() => [
   {

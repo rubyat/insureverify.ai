@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
   <Head title="Reports" />
-  <AppLayout :breadcrumbs="[{ title: 'Admin', href: '/admin' }, { title: 'Reports', href: '/admin/reports' }]"></AppLayout>
+  <AppLayout :breadcrumbs="[{ title: 'Dashboard', href: '/admin/dashboard' }, { title: 'Reports', href: '/admin/reports' }]"></AppLayout>
   <div class="p-6 space-y-8">
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div class="rounded border p-4">

@@ -9,7 +9,7 @@ const props = defineProps<{ page: any }>()
 <template>
   <Head :title="`Edit: ${props.page.title}`" />
   <AppLayout :breadcrumbs="[
-    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
     { title: 'Pages', href: route('admin.pages.index') },
     { title: `Edit: ${props.page.title}`, href: '#' },
   ]">
