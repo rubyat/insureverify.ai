@@ -38,6 +38,7 @@ class PageController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:pages,slug'],
             'status' => ['required', Rule::in([0,1])],
+            'is_home' => ['nullable', 'boolean'],
             'content' => ['nullable', 'string'],
             'seo' => ['array'],
             'seo.seo_title' => ['nullable', 'string', 'max:255'],
@@ -55,7 +56,13 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
+        $data['is_home'] = (bool) ($data['is_home'] ?? false);
+
         $page = Page::create(collect($data)->except('seo')->all());
+        // Ensure single home page
+        if ($page->is_home) {
+            Page::query()->where('id', '!=', $page->id)->update(['is_home' => false]);
+        }
         if (!empty($data['seo'])) {
             $page->seo()->create($data['seo']);
         }
@@ -77,6 +84,7 @@ class PageController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('pages', 'slug')->ignore($page->id)],
             'status' => ['required', Rule::in([0,1])],
+            'is_home' => ['nullable', 'boolean'],
             'content' => ['nullable', 'string'],
             'seo' => ['array'],
             'seo.seo_title' => ['nullable', 'string', 'max:255'],
@@ -94,7 +102,13 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
+        $data['is_home'] = (bool) ($data['is_home'] ?? false);
+
         $page->update(collect($data)->except('seo')->all());
+        // Ensure single home page
+        if ($page->is_home) {
+            Page::query()->where('id', '!=', $page->id)->update(['is_home' => false]);
+        }
         // Use morphOne constraints; no need to pass foreign keys
         $page->seo()->updateOrCreate([], $data['seo'] ?? []);
 
@@ -105,6 +119,38 @@ class PageController extends Controller
     {
         $page->delete();
         return redirect()->route('admin.pages.index')->with('success', 'Page deleted');
+    }
+
+    public function duplicate(Page $page)
+    {
+        // Replicate attributes
+        $copy = $page->replicate();
+        $copy->title = trim(($page->title ?? 'Untitled') . ' - copy');
+        $copy->status = 0; // inactive/draft
+        $copy->is_home = false; // never copy home flag
+
+        // Generate unique slug from new title
+        $baseSlug = Str::slug($copy->title) ?: 'page';
+        $slug = $baseSlug;
+        $i = 2;
+        while (Page::query()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+        }
+        $copy->slug = $slug;
+
+        $copy->push();
+
+        // Duplicate SEO if exists
+        $page->loadMissing('seo');
+        if ($page->seo) {
+            $seoData = $page->seo->only([
+                'seo_title', 'seo_index', 'seo_keyword', 'seo_description', 'seo_image', 'canonical_url', 'meta_json'
+            ]);
+            $copy->seo()->create($seoData);
+        }
+
+        return redirect()->route('admin.pages.index')->with('success', 'Page cloned');
     }
 }
 

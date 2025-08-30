@@ -8,7 +8,7 @@ class TextBlock extends BlockBase
 {
     public string $id = 'text';
     public string $name = 'Text';
-    public string $category = 'Other Block';
+    public string $category = 'Common';
 
     public function getOptions(): array
     {

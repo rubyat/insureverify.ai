@@ -12,12 +12,11 @@ class Menu extends Model
     protected $fillable = [
         'name',
         'items',
-        'locations',
+        'location',
         'status',
     ];
 
     protected $casts = [
         'items' => 'array',
-        'locations' => 'array',
     ];
 }

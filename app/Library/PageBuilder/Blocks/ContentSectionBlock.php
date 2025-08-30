@@ -8,7 +8,7 @@ class ContentSectionBlock extends BlockBase
 {
     public string $id = 'content_section';
     public string $name = 'Content Section';
-    public string $category = 'Common Sections';
+    public string $category = 'Common';
 
     public function getOptions(): array
     {

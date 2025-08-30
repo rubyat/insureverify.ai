@@ -36,7 +36,7 @@ class MenuController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active','inactive'])],
             'items' => ['nullable', 'array'],
-            'locations' => ['nullable', 'array'],
+            'location' => ['nullable', 'string'],
         ]);
 
         $menu = Menu::create($data);
@@ -56,7 +56,7 @@ class MenuController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active','inactive'])],
             'items' => ['nullable', 'array'],
-            'locations' => ['nullable', 'array'],
+            'location' => ['nullable', 'string'],
         ]);
 
         $menu->update($data);
@@ -116,7 +116,18 @@ class MenuController extends Controller
         $mapped = $items->map(function ($item) use ($class) {
             $name = $item->title ?? $item->name ?? (string) $item->id;
             $slug = $item->slug ?? null;
-            $url = $slug ? '/' . ltrim($slug, '/') : '#';
+            // Build URL based on class
+            if ($slug) {
+                if ($class === \App\Models\Blog::class) {
+                    $url = '/blog/' . ltrim($slug, '/');
+                } elseif ($class === \App\Models\BlogCategory::class) {
+                    $url = '/blog/category/' . ltrim($slug, '/');
+                } else { // Page or others default to page slug under root
+                    $url = '/' . ltrim($slug, '/');
+                }
+            } else {
+                $url = '#';
+            }
             return [
                 'id' => $item->id,
                 'name' => $name,

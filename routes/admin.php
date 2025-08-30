@@ -26,12 +26,15 @@ Route::prefix('admin')
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('plans', AdminPlanController::class);
+        Route::post('plans/{plan}/clone', [AdminPlanController::class, 'duplicate'])->name('plans.clone');
         // Pages CMS
         Route::resource('pages', AdminPageController::class);
+        Route::post('pages/{page}/clone', [AdminPageController::class, 'duplicate'])->name('pages.clone');
         // Blog Categories
         Route::resource('blog-categories', BlogCategoryController::class);
         // Blogs CMS
         Route::resource('blogs', BlogController::class);
+        Route::post('blogs/{blog}/clone', [BlogController::class, 'duplicate'])->name('blogs.clone');
         // Menus
         // Place auxiliary endpoints before the resource to avoid matching the {menu} parameter
         Route::get('menu/content-types', [MenuController::class, 'contentTypes'])->name('menu.content_types');

@@ -8,7 +8,7 @@ class CtaBannerBlock extends BlockBase
 {
     public string $id = 'cta_banner';
     public string $name = 'CTA Banner';
-    public string $category = 'Home Page';
+    public string $category = 'Sections';
 
     public function getOptions(): array
     {

@@ -8,7 +8,7 @@ class ContactBlock extends BlockBase
 {
     public string $id = 'contact';
     public string $name = 'Contact';
-    public string $category = 'Common Sections';
+    public string $category = 'Common';
 
     public function getOptions(): array
     {

@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->json('items')->nullable();
-            $table->json('locations')->nullable();
+            $table->string('location')->nullable();
             $table->string('status', 50)->default('active');
             $table->timestamps();
         });

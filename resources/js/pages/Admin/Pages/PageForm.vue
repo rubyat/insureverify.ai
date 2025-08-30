@@ -112,19 +112,37 @@ function submitUpdate(id: number) {
   })
 }
 
- 
+
 
 const quillContent = ref(form.content)
 watch(quillContent, (v) => (form.content = v ?? ''))
 
 // SEO Modal state
 const seoModalOpen = ref(false)
-const seoActiveTab = ref<'general' | 'facebook' | 'twitter'>('general')
+const seoActiveTab = ref<'general' | 'facebook' | 'twitter' | 'schema'>('general')
 
 // Ensure defaults for meta_json buckets
 if (!form.seo.meta_json) form.seo.meta_json = {}
 if (!form.seo.meta_json.facebook) form.seo.meta_json.facebook = {}
 if (!form.seo.meta_json.twitter) form.seo.meta_json.twitter = {}
+if (!form.seo.meta_json.schema) form.seo.meta_json.schema = { enabled: false }
+
+function ensureSchemaDefaults() {
+  const s: any = form.seo.meta_json.schema
+  if (!s['@type']) s['@type'] = 'WebPage'
+  if (!('name' in s)) s.name = ''
+  if (!('description' in s)) s.description = ''
+  if (!s.mainEntity) s.mainEntity = {}
+  if (!s.mainEntity['@type']) s.mainEntity['@type'] = 'SoftwareApplication'
+  if (!('name' in s.mainEntity)) s.mainEntity.name = ''
+  if (!('operatingSystem' in s.mainEntity)) s.mainEntity.operatingSystem = 'Cloud-based'
+  if (!('applicationCategory' in s.mainEntity)) s.mainEntity.applicationCategory = ''
+  if (!s.mainEntity.offers) s.mainEntity.offers = {}
+  if (!('price' in s.mainEntity.offers)) s.mainEntity.offers.price = ''
+  if (!('priceCurrency' in s.mainEntity.offers)) s.mainEntity.offers.priceCurrency = ''
+  if (!Array.isArray(s.mainEntity.featureList)) s.mainEntity.featureList = []
+}
+ensureSchemaDefaults()
 
 // Placeholder for SEO image comes from backend (Seo::$appends['placeholder'])
 const seoPlaceholder = computed(() => (props.page?.seo?.placeholder as string | undefined) ?? '/storage/placeholder.png')
@@ -138,6 +156,26 @@ const tw = computed({
   get: () => form.seo.meta_json.twitter,
   set: (v: any) => (form.seo.meta_json = { ...form.seo.meta_json, twitter: v }),
 })
+
+// Schema bindings (used by Schema tab form)
+const schema = computed({
+  get: () => form.seo.meta_json.schema,
+  set: (v: any) => (form.seo.meta_json = { ...form.seo.meta_json, schema: v }),
+})
+
+// Feature list helper for textarea editing
+const schemaFeatures = computed({
+  get: () => (schema.value?.mainEntity?.featureList ?? []).join('\n'),
+  set: (v: string) => {
+    const lines = (v || '')
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const me = { ...(schema.value?.mainEntity ?? {}), featureList: lines }
+    schema.value = { ...(schema.value ?? {}), mainEntity: me }
+  },
+})
+
 </script>
 
 <template>
@@ -220,8 +258,9 @@ const tw = computed({
         </div>
         <div class="border-b flex gap-4 text-sm">
           <button type="button" :class="['pb-2', seoActiveTab==='general' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='general'">General Options</button>
-          <button type="button" :class="['pb-2', seoActiveTab==='facebook' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='facebook'">Share Facebook</button>
-          <button type="button" :class="['pb-2', seoActiveTab==='twitter' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='twitter'">Share Twitter</button>
+          <button v-if="false" type="button" :class="['pb-2', seoActiveTab==='facebook' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='facebook'">Share Facebook</button>
+          <button v-if="false" type="button" :class="['pb-2', seoActiveTab==='twitter' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='twitter'">Share Twitter</button>
+          <button type="button" :class="['pb-2', seoActiveTab==='schema' ? 'border-b-2 border-blue-600' : 'text-gray-500']" @click="seoActiveTab='schema'">Schema</button>
         </div>
       </div>
       <div class="p-4 space-y-4 max-h-[70vh] overflow-auto">
@@ -272,6 +311,73 @@ const tw = computed({
           <div>
             <label class="block text-sm">Twitter Image</label>
             <ImagePicker v-model="tw.image" />
+          </div>
+        </div>
+
+        <!-- Schema Form -->
+        <div v-show="seoActiveTab==='schema'" class="space-y-6">
+          <div class="flex items-center gap-2">
+            <input id="schema-enabled" type="checkbox" v-model="form.seo.meta_json.schema.enabled" />
+            <label for="schema-enabled" class="text-sm">Enable structured data (JSON-LD)</label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm">Schema Type (@type)</label>
+              <input v-model="form.seo.meta_json.schema['@type']" type="text" class="mt-1 w-full rounded border px-3 py-2" placeholder="WebPage" />
+            </div>
+            <div>
+              <label class="block text-sm">Name</label>
+              <input v-model="form.seo.meta_json.schema.name" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm">Description</label>
+            <textarea v-model="form.seo.meta_json.schema.description" class="mt-1 w-full rounded border px-3 py-2" rows="3"></textarea>
+          </div>
+
+          <div class="border rounded p-3 space-y-4">
+            <div class="font-medium text-sm">Main Entity</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm">@type</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity['@type']" type="text" class="mt-1 w-full rounded border px-3 py-2" placeholder="SoftwareApplication" />
+              </div>
+              <div>
+                <label class="block text-sm">Name</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity.name" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm">Operating System</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity.operatingSystem" type="text" class="mt-1 w-full rounded border px-3 py-2" placeholder="Cloud-based" />
+              </div>
+              <div>
+                <label class="block text-sm">Application Category</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity.applicationCategory" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm">Price</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity.offers.price" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm">Price Currency</label>
+                <input v-model="form.seo.meta_json.schema.mainEntity.offers.priceCurrency" type="text" class="mt-1 w-full rounded border px-3 py-2" placeholder="USD" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm">Feature List (one per line)</label>
+              <textarea v-model="schemaFeatures" class="mt-1 w-full rounded border px-3 py-2" rows="4" placeholder="e.g. Real-time verification\nAI-powered risk scoring"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm">Main Entity Description</label>
+              <textarea v-model="form.seo.meta_json.schema.mainEntity.description" class="mt-1 w-full rounded border px-3 py-2" rows="3"></textarea>
+            </div>
           </div>
         </div>
       </div>

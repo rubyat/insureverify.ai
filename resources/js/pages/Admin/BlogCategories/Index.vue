@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { decodeAndStrip } from '@/utils/strings'
+import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps<{ categories: any, filters?: any }>()
@@ -9,6 +10,21 @@ const props = defineProps<{ categories: any, filters?: any }>()
 const search = ref(props.filters?.q || '')
 const performSearch = () => {
   router.get(route('admin.blog-categories.index'), { q: search.value }, { preserveState: true, replace: true })
+}
+
+const confirmDelete = async (id: number) => {
+  const result = await Swal.fire({
+    title: 'Delete this category?',
+    text: 'This action cannot be undone.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    confirmButtonText: 'Delete',
+    cancelButtonText: 'Cancel',
+  })
+  if (result.isConfirmed) {
+    router.delete(route('admin.blog-categories.destroy', id), { preserveScroll: true })
+  }
 }
 </script>
 
@@ -30,7 +46,6 @@ const performSearch = () => {
         <table class="min-w-full divide-y">
           <thead>
             <tr class="text-left">
-              <th class="px-4 py-2"></th>
               <th class="px-4 py-2">Title</th>
               <th class="px-4 py-2">Slug</th>
               <th class="px-4 py-2">Date</th>
@@ -40,7 +55,6 @@ const performSearch = () => {
           </thead>
           <tbody class="divide-y">
             <tr v-for="c in categories.data" :key="c.id" class="hover:bg-gray-50">
-              <td class="px-4 py-3"><input type="checkbox" /></td>
               <td class="px-4 py-3">
                 <Link :href="route('admin.blog-categories.edit', c.id)" class="text-primary hover:underline">{{ c.title }}</Link>
               </td>
@@ -53,6 +67,7 @@ const performSearch = () => {
               </td>
               <td class="px-4 py-3 text-right space-x-2">
                 <Link :href="route('admin.blog-categories.edit', c.id)" class="inline-flex items-center gap-2 rounded bg-primary px-3 py-1.5 text-sm text-white">Edit</Link>
+                <button @click="confirmDelete(c.id)" class="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Delete</button>
               </td>
             </tr>
           </tbody>

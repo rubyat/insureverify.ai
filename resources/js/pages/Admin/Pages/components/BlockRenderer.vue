@@ -25,6 +25,8 @@ const registry: Record<string, any> = {
   content_section: defineAsyncComponent(() => import('@/components/blocks/ContentSectionBlock.vue')),
   pricing: defineAsyncComponent(() => import('@/components/blocks/PricingBlock.vue')),
   contact: defineAsyncComponent(() => import('@/components/blocks/ContactBlock.vue')),
+  partners: defineAsyncComponent(() => import('@/components/blocks/PartnersBlock.vue')),
+  features: defineAsyncComponent(() => import('@/components/blocks/FeaturesBlock.vue')),
 }
 
 function childrenOf(nodeId: string) {

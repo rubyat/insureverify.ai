@@ -10,6 +10,11 @@ use App\Models\Subscription;
 use App\Models\SubscriptionUsage;
 use App\Models\SubscriptionEvent;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Mail\InvoiceIssued;
+use App\Mail\InvoiceAdminNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -166,6 +171,49 @@ class AuthController extends Controller
                 ],
                 'created_at' => now(),
             ]);
+
+            // Create invoice for initial period
+            $invoice = Invoice::create([
+                'subscription_id' => $subscription->id,
+                'user_id' => $user->id,
+                'number' => Invoice::generateInvoiceNumber(),
+                'status' => 'issued',
+                'currency' => 'USD',
+                'subtotal_cents' => $priceMonthlyCents,
+                'discount_cents' => 0,
+                'tax_cents' => 0,
+                'total_cents' => $priceMonthlyCents,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'provider' => null,
+                'provider_invoice_id' => null,
+                'metadata' => ['source' => 'signup'],
+                'issued_at' => now(),
+                'due_at' => now(),
+            ]);
+
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'type' => 'subscription',
+                'description' => 'Subscription - ' . ($plan->name ?? 'Plan') . ' (Monthly)',
+                'quantity' => 1,
+                'unit_price_cents' => $priceMonthlyCents,
+                'amount_cents' => $priceMonthlyCents,
+                'metadata' => ['plan_id' => $plan->id, 'plan_slug' => $plan->slug],
+            ]);
+
+            // Send emails: user and admin
+            try {
+                Mail::to($user->email)->send(new InvoiceIssued($invoice));
+                $adminEmail = config('mail.admin.address')
+                    ?? env('ADMIN_EMAIL')
+                    ?? config('mail.from.address');
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->send(new InvoiceAdminNotification($invoice));
+                }
+            } catch (\Throwable $e) {
+                // Swallow email errors; consider logging
+            }
         });
 
         // Redirect user to dashboard after successful signup + subscription creation

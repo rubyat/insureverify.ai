@@ -125,4 +125,35 @@ class BlogController extends Controller
         $blog->delete();
         return redirect()->route('admin.blogs.index')->with('success', 'Blog deleted');
     }
+
+    public function duplicate(Blog $blog)
+    {
+        // Replicate attributes
+        $copy = $blog->replicate();
+        $copy->title = trim(($blog->title ?? 'Untitled') . ' - copy');
+        $copy->status = 0; // inactive/draft
+
+        // Generate unique slug from new title
+        $baseSlug = Str::slug($copy->title) ?: 'blog';
+        $slug = $baseSlug;
+        $i = 2;
+        while (Blog::query()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+        }
+        $copy->slug = $slug;
+
+        $copy->push();
+
+        // Duplicate SEO if exists
+        $blog->loadMissing('seo');
+        if ($blog->seo) {
+            $seoData = $blog->seo->only([
+                'seo_title', 'seo_index', 'seo_keyword', 'seo_description', 'seo_image', 'canonical_url', 'meta_json'
+            ]);
+            $copy->seo()->create($seoData);
+        }
+
+        return redirect()->route('admin.blogs.index')->with('success', 'Blog cloned');
+    }
 }

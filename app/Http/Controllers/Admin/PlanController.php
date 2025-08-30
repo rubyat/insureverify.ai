@@ -139,6 +139,21 @@ class PlanController extends Controller
         return redirect()->route('admin.plans.index')
             ->with('success', 'Plan deleted');
     }
+
+    public function duplicate(Plan $plan): RedirectResponse
+    {
+        $copy = $plan->replicate();
+        $copy->name = trim(($plan->name ?? 'Untitled') . ' - copy');
+        $copy->is_active = false;
+
+        // compute unique slug from new name
+        $copy->slug = Plan::uniqueSlug($copy->name);
+
+        $copy->save();
+
+        return redirect()->route('admin.plans.index')
+            ->with('success', 'Plan cloned');
+    }
 }
 
 

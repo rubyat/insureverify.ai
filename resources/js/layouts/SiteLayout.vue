@@ -24,6 +24,14 @@ const authUser = computed(() => (page.props as any)?.auth?.user)
 const settings = computed(() => (page.props as any)?.settings ?? {})
 const copyrightText = computed(() => settings.value?.copyright || `© ${new Date().getFullYear()} InsureVerifyAI. All rights reserved.`)
 
+// Menus shared via Inertia: { primary: MenuItem[], footer: MenuItem[], secondary: MenuItem[] }
+const menus = computed(() => (page.props as any)?.menus ?? { primary: [], footer: [], secondary: [] })
+
+function isExternal(url?: string): boolean {
+  if (!url) return false
+  return /^https?:\/\//i.test(url)
+}
+
 function onDocumentClick(e: MouseEvent) {
   const target = e.target as HTMLElement
   const menu = document.getElementById('user-menu')
@@ -113,10 +121,10 @@ function panelAfterLeave(el: Element) {
 
         <!-- Center: Main Nav -->
         <nav class="hidden sm:flex items-center justify-center gap-6 text-sm">
-
-          <Link :href="route('features')" class="text-gray-300 hover:text-sky-500">Features</Link>
-          <Link :href="route('plans.index')" class="text-gray-300 hover:text-sky-500">Pricing</Link>
-          <Link :href="route('contact')" class="text-gray-300 hover:text-sky-500">Contact</Link>
+          <template v-for="(item, idx) in menus.primary" :key="idx">
+            <a v-if="isExternal(item.url)" :href="item.url" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-sky-500">{{ item.name }}</a>
+            <Link v-else :href="item.url || '#'" class="text-gray-300 hover:text-sky-500">{{ item.name }}</Link>
+          </template>
         </nav>
 
         <!-- Right: Auth Links / User Dropdown -->
@@ -186,10 +194,10 @@ function panelAfterLeave(el: Element) {
         <div v-show="mobileNavOpen" class="sm:hidden border-t border-white/10 bg-black/95 text-gray-200 transform">
           <div class="px-4 py-3 space-y-2 text-sm">
             <div class="grid grid-cols-1 gap-2 text-right">
-              <Link :href="route('home')" class="block px-3 py-2 rounded hover:bg-white/10">Home</Link>
-              <Link :href="route('features')" class="block px-3 py-2 rounded hover:bg-white/10">Features</Link>
-              <Link :href="route('plans.index')" class="block px-3 py-2 rounded hover:bg-white/10">Pricing</Link>
-              <Link :href="route('contact')" class="block px-3 py-2 rounded hover:bg-white/10">Contact</Link>
+              <template v-for="(item, idx) in menus.primary" :key="idx">
+                <a v-if="isExternal(item.url)" :href="item.url" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 rounded hover:bg-white/10">{{ item.name }}</a>
+                <Link v-else :href="item.url || '#'" class="block px-3 py-2 rounded hover:bg-white/10">{{ item.name }}</Link>
+              </template>
             </div>
           </div>
         </div>
@@ -263,9 +271,10 @@ function panelAfterLeave(el: Element) {
         <div>
           <p class="text-white font-semibold mb-4">Quick Links</p>
           <ul class="space-y-2 text-sm text-gray-400">
-            <li><Link href="/about-us" class="hover:text-sky-500">About us</Link></li>
-            <li><Link href="/pricing" class="hover:text-sky-500">Pricing</Link></li>
-            <li><Link href="/docs" class="hover:text-sky-500">API Documentation</Link></li>
+            <li v-for="(item, idx) in menus.footer" :key="idx">
+              <a v-if="isExternal(item.url)" :href="item.url" target="_blank" rel="noopener noreferrer" class="hover:text-sky-500">{{ item.name }}</a>
+              <Link v-else :href="item.url || '#'" class="hover:text-sky-500">{{ item.name }}</Link>
+            </li>
           </ul>
           <div class="flex flex-wrap gap-3 mt-6">
             <a v-if="settings.social?.facebook" class="bg-white/10 hover:bg-sky-600 text-white p-2 rounded-full transition" aria-label="Facebook" :href="settings.social.facebook" target="_blank" rel="noopener noreferrer">
@@ -290,9 +299,10 @@ function panelAfterLeave(el: Element) {
         <div>
           <p class="text-white font-semibold mb-4">Legal</p>
           <ul class="space-y-2 text-sm text-gray-400">
-            <li><Link href="/privacy-policy" class="hover:text-sky-500">Privacy Policy</Link></li>
-            <li><Link href="/terms-of-service" class="hover:text-sky-500">Terms of Service</Link></li>
-            <li><Link href="/faq" class="hover:text-sky-500">FAQ</Link></li>
+            <li v-for="(item, idx) in menus.secondary" :key="idx">
+              <a v-if="isExternal(item.url)" :href="item.url" target="_blank" rel="noopener noreferrer" class="hover:text-sky-500">{{ item.name }}</a>
+              <Link v-else :href="item.url || '#'" class="hover:text-sky-500">{{ item.name }}</Link>
+            </li>
           </ul>
         </div>
 

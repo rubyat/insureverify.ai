@@ -8,7 +8,7 @@ class PricingBlock extends BlockBase
 {
     public string $id = 'pricing';
     public string $name = 'Pricing';
-    public string $category = 'Home Page';
+    public string $category = 'Sections';
 
     public function getOptions(): array
     {

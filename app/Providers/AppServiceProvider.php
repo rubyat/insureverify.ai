@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use App\Models\Menu;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +35,22 @@ class AppServiceProvider extends ServiceProvider
                 'youtube' => config('settings.youtube'),
             ],
         ]);
+
+        // Share menus by location: primary, footer, secondary
+        Inertia::share('menus', function () {
+            $locations = ['primary', 'footer', 'secondary'];
+            $menus = Menu::query()
+                ->where('status', 'active')
+                ->whereIn('location', $locations)
+                ->get(['id', 'name', 'location', 'items'])
+                ->keyBy('location');
+
+            // Ensure arrays for each expected location, even if missing
+            $result = [];
+            foreach ($locations as $loc) {
+                $result[$loc] = (array) ($menus[$loc]->items ?? []);
+            }
+            return $result;
+        });
     }
 }

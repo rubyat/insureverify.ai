@@ -8,7 +8,7 @@ class FaqBlock extends BlockBase
 {
     public string $id = 'faq';
     public string $name = 'FAQ';
-    public string $category = 'Other Block';
+    public string $category = 'Common';
 
     public function getOptions(): array
     {

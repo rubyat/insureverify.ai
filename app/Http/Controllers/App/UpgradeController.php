@@ -7,8 +7,13 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionEvent;
 use App\Services\AuthorizeNetService;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Mail\InvoiceIssued;
+use App\Mail\InvoiceAdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -136,6 +141,50 @@ class UpgradeController extends Controller
                 'metadata' => ['source' => 'upgrade'],
                 'created_at' => now(),
             ]);
+
+            // Create invoice for the upgrade (new period)
+            $priceMonthlyCents = (int) round((float) ($plan->price ?? 0) * 100);
+            $invoice = Invoice::create([
+                'subscription_id' => $new->id,
+                'user_id' => $user->id,
+                'number' => Invoice::generateInvoiceNumber(),
+                'status' => 'issued',
+                'currency' => 'USD',
+                'subtotal_cents' => $priceMonthlyCents,
+                'discount_cents' => 0,
+                'tax_cents' => 0,
+                'total_cents' => $priceMonthlyCents,
+                'period_start' => $new->current_period_start,
+                'period_end' => $new->current_period_end,
+                'provider' => $providerSubId ? 'authorize_net' : 'local',
+                'provider_invoice_id' => null,
+                'metadata' => ['source' => 'upgrade'],
+                'issued_at' => now(),
+                'due_at' => now(),
+            ]);
+
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'type' => 'subscription',
+                'description' => 'Subscription - ' . ($plan->name ?? 'Plan') . ' (Monthly)',
+                'quantity' => 1,
+                'unit_price_cents' => $priceMonthlyCents,
+                'amount_cents' => $priceMonthlyCents,
+                'metadata' => ['plan_id' => $plan->id, 'plan_slug' => $plan->slug],
+            ]);
+
+            // Send emails: user and admin
+            try {
+                Mail::to($user->email)->send(new InvoiceIssued($invoice));
+                $adminEmail = config('mail.admin.address')
+                    ?? env('ADMIN_EMAIL')
+                    ?? config('mail.from.address');
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->send(new InvoiceAdminNotification($invoice));
+                }
+            } catch (\Throwable $e) {
+                // Swallow email errors; consider logging
+            }
         });
 
         return redirect()->route('app.upgrade')->with('success', 'Plan updated to '.$plan->name.'.');

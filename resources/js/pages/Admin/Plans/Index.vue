@@ -40,6 +40,20 @@ const performSearch = () => {
   router.get(route('admin.plans.index'), { search: search.value }, { preserveState: true, replace: true })
 }
 
+const confirmClone = async (id: number) => {
+  const result = await Swal.fire({
+    title: 'Clone this plan?',
+    text: 'A copy will be created with status set to Draft.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Clone',
+    cancelButtonText: 'Cancel',
+  })
+  if (result.isConfirmed) {
+    router.post(route('admin.plans.clone', id), {}, { preserveScroll: true })
+  }
+}
+
 // Use shared util to safely decode pagination labels
 </script>
 
@@ -86,6 +100,7 @@ const performSearch = () => {
                   <Link :href="route('admin.plans.edit', plan.id)" class="inline-flex items-center gap-2 rounded bg-primary px-3 py-1.5 text-sm text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path d="M15.586 3.586a2 2 0 0 1 2.828 2.828l-9.193 9.193a4 4 0 0 1-1.414.94l-3.122 1.104a.5.5 0 0 1-.632-.632l1.104-3.122a4 4 0 0 1 .94-1.414l9.193-9.193ZM12 5l3 3"/></svg>
                   </Link>
+                  <button @click="confirmClone(plan.id)" class="ml-2 inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Clone</button>
                   <button @click="confirmDelete(plan.id)" class="ml-2 inline-flex items-center gap-2 rounded border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M9 2a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v13a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V6h.5a1 1 0 1 0 0-2H16V3a1 1 0 0 0-1-1H9Zm2 5a1 1 0 0 0-1 1v9a1 1 0 1 0 2 0V8a1 1 0 0 0-1-1Zm4 0a1 1 0 0 0-1 1v9a1 1 0 1 0 2 0V8a1 1 0 0 0-1-1Z" clip-rule="evenodd"/></svg>
                   </button>

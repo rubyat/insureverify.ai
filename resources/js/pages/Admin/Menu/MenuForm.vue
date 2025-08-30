@@ -11,7 +11,7 @@ const form = useForm<any>({
   name: props.menu?.name || '',
   status: props.menu?.status || 'active',
   items: props.menu?.items || [],
-  locations: props.menu?.locations || [],
+  location: props.menu?.location || '',
 })
 
 watch(() => props.menu, (m) => {
@@ -19,7 +19,7 @@ watch(() => props.menu, (m) => {
     form.name = m.name
     form.status = m.status
     form.items = m.items || []
-    form.locations = m.locations || []
+    form.location = m.location || ''
   }
 })
 
@@ -61,8 +61,8 @@ const method = props.method
               <div v-if="form.errors.status" class="text-red-600 text-sm mt-1">{{ form.errors.status }}</div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Locations</label>
-              <LocationSelector v-model="form.locations" />
+              <label class="block text-sm font-medium mb-1">Location</label>
+              <LocationSelector v-model="form.location" />
             </div>
           </div>
         </div>

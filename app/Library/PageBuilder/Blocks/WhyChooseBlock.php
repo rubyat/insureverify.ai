@@ -8,7 +8,7 @@ class WhyChooseBlock extends BlockBase
 {
     public string $id = 'why_choose';
     public string $name = 'Why Choose Section';
-    public string $category = 'Home Page';
+    public string $category = 'Sections';
 
     public function getOptions(): array
     {

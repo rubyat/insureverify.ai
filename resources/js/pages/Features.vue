@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import SiteLayout from '@/layouts/SiteLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
-import { Zap, Code2, ShieldCheck, Server } from 'lucide-vue-next'
 </script>
 
 <template>
@@ -14,7 +13,7 @@ import { Zap, Code2, ShieldCheck, Server } from 'lucide-vue-next'
         <div class="group rounded-xl border bg-background/50 p-6 hover:shadow-md transition">
           <div class="flex items-start gap-4">
             <div class="shrink-0 rounded-lg bg-primary/10 text-primary p-3 ring-1 ring-primary/20 transition-transform group-hover:-translate-y-0.5">
-              <Zap class="w-6 h-6" />
+              <i class="fa-solid fa-bolt w-6 h-6 text-xl"></i>
             </div>
             <div class="space-y-1">
               <h3 class="font-semibold text-lg">Fast Verification</h3>
@@ -26,7 +25,7 @@ import { Zap, Code2, ShieldCheck, Server } from 'lucide-vue-next'
         <div class="group rounded-xl border bg-background/50 p-6 hover:shadow-md transition">
           <div class="flex items-start gap-4">
             <div class="shrink-0 rounded-lg bg-primary/10 text-primary p-3 ring-1 ring-primary/20 transition-transform group-hover:-translate-y-0.5">
-              <Code2 class="w-6 h-6" />
+              <i class="fa-solid fa-code w-6 h-6 text-xl"></i>
             </div>
             <div class="space-y-1">
               <h3 class="font-semibold text-lg">Developer Friendly</h3>
@@ -38,7 +37,7 @@ import { Zap, Code2, ShieldCheck, Server } from 'lucide-vue-next'
         <div class="group rounded-xl border bg-background/50 p-6 hover:shadow-md transition">
           <div class="flex items-start gap-4">
             <div class="shrink-0 rounded-lg bg-primary/10 text-primary p-3 ring-1 ring-primary/20 transition-transform group-hover:-translate-y-0.5">
-              <ShieldCheck class="w-6 h-6" />
+              <i class="fa-solid fa-shield-halved w-6 h-6 text-xl"></i>
             </div>
             <div class="space-y-1">
               <h3 class="font-semibold text-lg">Secure & Encrypted</h3>
@@ -50,7 +49,7 @@ import { Zap, Code2, ShieldCheck, Server } from 'lucide-vue-next'
         <div class="group rounded-xl border bg-background/50 p-6 hover:shadow-md transition">
           <div class="flex items-start gap-4">
             <div class="shrink-0 rounded-lg bg-primary/10 text-primary p-3 ring-1 ring-primary/20 transition-transform group-hover:-translate-y-0.5">
-              <Server class="w-6 h-6" />
+              <i class="fa-solid fa-server w-6 h-6 text-xl"></i>
             </div>
             <div class="space-y-1">
               <h3 class="font-semibold text-lg">Scalable Infrastructure</h3>

@@ -15,27 +15,32 @@ use App\Http\Controllers\Cron\SubscriptionRenewalController;
 use App\Http\Controllers\BlogPublicController;
 use App\Http\Controllers\PagePublicController;
 use App\Http\Controllers\SitemapController;
+// use App\Models\Page; // no longer needed here
 
 // Public marketing site routes
-Route::get('/', [PagesController::class, 'home'])->name('home');
-Route::get('/features', [PagesController::class, 'features'])->name('features');
-Route::get('/about-us', [PagesController::class, 'about'])->name('about');
-Route::get('/docs', [PagesController::class, 'docs'])->name('docs');
-Route::get('/contact', [PagesController::class, 'contact'])->name('contact');
-Route::post('/contact', [PagesController::class, 'submitContact'])->name('contact.submit');
-Route::get('/privacy-policy', [PagesController::class, 'privacy'])->name('privacy');
-Route::get('/terms-of-service', [PagesController::class, 'terms'])->name('terms');
-Route::get('/faq', [PagesController::class, 'faq'])->name('faq');
+Route::get('/', [PagePublicController::class, 'home'])->name('home');
+// Route::get('/features', [PagesController::class, 'features'])->name('features');
+// Route::get('/about-us', [PagesController::class, 'about'])->name('about');
+// Route::get('/docs', [PagesController::class, 'docs'])->name('docs');
+// Route::get('/contact', [PagesController::class, 'contact'])->name('contact');
+// Route::post('/contact', [PagesController::class, 'submitContact'])->name('contact.submit');
+// Route::get('/privacy-policy', [PagesController::class, 'privacy'])->name('privacy');
+// Legacy marketing controller version was removed; map to CMS page instead
+Route::get('/terms-of-service', [PagePublicController::class, 'show'])
+    ->defaults('slug', 'terms-of-service')
+    ->name('terms');
+// Route::get('/faq', [PagesController::class, 'faq'])->name('faq');
 // Signup routes handled by Marketing AuthController
+
 Route::get('/signup', [MarketingAuthController::class, 'showSignup'])->name('signup');
 Route::post('/signup', [MarketingAuthController::class, 'signup'])->name('signup.store');
 // Keep existing public plans listing; add a convenience alias
-Route::get('/pricing', function () {
-    return redirect()->route('plans.index');
-})->name('pricing');
+// Route::get('/pricing', function () {
+//     return redirect()->route('plans.index');
+// })->name('pricing');
 
 // Public plans listing
-Route::get('/plans', [PublicPlanController::class, 'index'])->name('plans.index');
+// Route::get('/plans', [PublicPlanController::class, 'index'])->name('plans.index');
 // Public plan signup/preview page
 Route::get('/plan/{slug}', [PublicPlanController::class, 'show'])->name('plan.show');
 
