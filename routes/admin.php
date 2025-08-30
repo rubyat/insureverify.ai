@@ -10,8 +10,12 @@ use App\Http\Controllers\Admin\UsageController as AdminUsageController;
 use App\Http\Controllers\Admin\PaymentsController as AdminPaymentsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\PageBuilder\PageController as AdminPageController;
 use App\Http\Controllers\PageBuilder\BuilderController;
+use App\Http\Controllers\PageBuilder\BlogBuilderController;
 
 // Admin routes, protected by admin role
 Route::prefix('admin')
@@ -24,9 +28,23 @@ Route::prefix('admin')
         Route::resource('plans', AdminPlanController::class);
         // Pages CMS
         Route::resource('pages', AdminPageController::class);
+        // Blog Categories
+        Route::resource('blog-categories', BlogCategoryController::class);
+        // Blogs CMS
+        Route::resource('blogs', BlogController::class);
+        // Menus
+        // Place auxiliary endpoints before the resource to avoid matching the {menu} parameter
+        Route::get('menu/content-types', [MenuController::class, 'contentTypes'])->name('menu.content_types');
+        Route::post('menu/search-content', [MenuController::class, 'searchContent'])->name('menu.search_content');
+        Route::get('menu/locations', [MenuController::class, 'locations'])->name('menu.locations');
+        Route::resource('menu', MenuController::class)->except(['show']);
         Route::get('pages/{page}/builder', [BuilderController::class, 'editor'])->name('pages.builder');
         Route::post('pages/{page}/template', [BuilderController::class, 'save'])->name('pages.template.save');
         Route::get('pages/{page}/live-preview', [BuilderController::class, 'livePreview'])->name('pages.live_preview');
+        // Blog Template Builder
+        Route::get('blogs/{blog}/builder', [BlogBuilderController::class, 'editor'])->name('blogs.builder');
+        Route::post('blogs/{blog}/template', [BlogBuilderController::class, 'save'])->name('blogs.template.save');
+        Route::get('blogs/{blog}/live-preview', [BlogBuilderController::class, 'livePreview'])->name('blogs.live_preview');
         Route::get('blocks', [BuilderController::class, 'blocks'])->name('blocks.index');
         Route::post('blocks/preview', [BuilderController::class, 'preview'])->name('blocks.preview');
         Route::post('blocks/render', [BuilderController::class, 'render'])->name('blocks.render');

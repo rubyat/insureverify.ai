@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+import { decodeAndStrip } from '@/utils/strings'
 import AppLayout from '@/layouts/AppLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 
@@ -20,13 +21,7 @@ const performSearch = () => {
   router.get(route('admin.subscribers.index'), { search: search.value }, { preserveState: true, replace: true })
 }
 
-const formatLinkLabel = (label: string): string => {
-  if (!label) return ''
-  const stripped = label.replace(/<[^>]*>/g, '')
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = stripped
-  return textarea.value
-}
+// decodeAndStrip is used for pagination labels
 
 const totalCount = computed(() => props.items?.total || 0)
 </script>
@@ -82,12 +77,14 @@ const totalCount = computed(() => props.items?.total || 0)
       </div>
 
       <div class="flex items-center gap-2" v-if="items.links">
-        <Link v-for="link in items.links" :key="link.url + link.label" :href="link.url || '#'" :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]"></Link>
-        <span v-for="link in items.links" class="hidden">{{ formatLinkLabel(link.label) }}</span>
-        <div class="hidden"></div>
-      </div>
-      <div class="flex items-center gap-2" v-if="items.links">
-        <Link v-for="link in items.links" :key="link.label + '-2'" :href="link.url || '#'" :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]"><span>{{ formatLinkLabel(link.label) }}</span></Link>
+        <Link
+          v-for="link in items.links"
+          :key="link.url + link.label"
+          :href="link.url || '#'"
+          :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]"
+        >
+          {{ decodeAndStrip(link.label) }}
+        </Link>
       </div>
     </div>
   </AppLayout>

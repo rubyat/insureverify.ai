@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, CreditCard, Users, BarChart3, UserPlus, Activity, Wallet, FileText, Settings, Layers } from 'lucide-vue-next';
+import { LayoutGrid, CreditCard, Users, BarChart3, UserPlus, Activity, Wallet, Settings, Layers, Files, Newspaper, Tags, ListTree } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -32,7 +32,10 @@ const adminNavItems: NavItem[] = [
   { title: 'Billing', href: '/admin/billing', icon: CreditCard },
   { title: 'Usage', href: '/admin/usage', icon: Activity },
   { title: 'Payments', href: '/admin/payments', icon: Wallet },
-  { title: 'Pages', href: '/admin/pages', icon: FileText },
+  { title: 'Pages', href: '/admin/pages', icon: Files },
+  { title: 'Blog', href: '/admin/blogs', icon: Newspaper },
+  { title: 'Blog Categories', href: '/admin/blog-categories', icon: Tags },
+  { title: 'Menus', href: '/admin/menu', icon: ListTree },
   { title: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 </script>

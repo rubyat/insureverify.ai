@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { decodeAndStrip } from '@/utils/strings'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const props = defineProps<{ pages: any, filters?: any }>()
@@ -61,7 +62,7 @@ const performSearch = () => {
 
       <div class="flex items-center gap-2" v-if="pages.links">
         <Link v-for="link in pages.links" :key="link.url + link.label" :href="link.url || '#'" :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]">
-          {{ (link.label || '').replace(/<[^>]*>/g, '') }}
+          {{ decodeAndStrip(link.label) }}
         </Link>
       </div>
     </div>

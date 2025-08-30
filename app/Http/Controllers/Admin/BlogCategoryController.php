@@ -1,42 +1,41 @@
 <?php
 
-namespace App\Http\Controllers\PageBuilder;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Page;
-use App\Models\Seo;
+use App\Models\BlogCategory;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
-class PageController extends Controller
+class BlogCategoryController extends Controller
 {
     public function index(Request $request)
     {
         $q = $request->string('q');
-        $pages = Page::query()
+        $categories = BlogCategory::query()
             ->when($q, fn($qq) => $qq->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
             ->latest('updated_at')
             ->paginate(20)
             ->withQueryString();
 
-        return Inertia::render('Admin/Pages/Index', [
-            'pages' => $pages,
+        return Inertia::render('Admin/BlogCategories/Index', [
+            'categories' => $categories,
             'filters' => ['q' => $q],
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Admin/Pages/Create');
+        return Inertia::render('Admin/BlogCategories/Create');
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:pages,slug'],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:blog_categories,slug'],
             'status' => ['required', Rule::in([0,1])],
             'content' => ['nullable', 'string'],
             'seo' => ['array'],
@@ -55,27 +54,27 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
-        $page = Page::create(collect($data)->except('seo')->all());
+        $category = BlogCategory::create(collect($data)->except('seo')->all());
         if (!empty($data['seo'])) {
-            $page->seo()->create($data['seo']);
+            $category->seo()->create($data['seo']);
         }
 
-        return redirect()->route('admin.pages.edit', $page)->with('success', 'Page created');
+        return redirect()->route('admin.blog-categories.edit', $category)->with('success', 'Category created');
     }
 
-    public function edit(Page $page)
+    public function edit(BlogCategory $blog_category)
     {
-        $page->load('seo');
-        return Inertia::render('Admin/Pages/Edit', [
-            'page' => $page,
+        $blog_category->load('seo');
+        return Inertia::render('Admin/BlogCategories/Edit', [
+            'category' => $blog_category,
         ]);
     }
 
-    public function update(Request $request, Page $page)
+    public function update(Request $request, BlogCategory $blog_category)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('pages', 'slug')->ignore($page->id)],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('blog_categories', 'slug')->ignore($blog_category->id)],
             'status' => ['required', Rule::in([0,1])],
             'content' => ['nullable', 'string'],
             'seo' => ['array'],
@@ -94,17 +93,15 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
-        $page->update(collect($data)->except('seo')->all());
-        // Use morphOne constraints; no need to pass foreign keys
-        $page->seo()->updateOrCreate([], $data['seo'] ?? []);
+        $blog_category->update(collect($data)->except('seo')->all());
+        $blog_category->seo()->updateOrCreate([], $data['seo'] ?? []);
 
-        return back()->with('success', 'Page updated');
+        return back()->with('success', 'Category updated');
     }
 
-    public function destroy(Page $page)
+    public function destroy(BlogCategory $blog_category)
     {
-        $page->delete();
-        return redirect()->route('admin.pages.index')->with('success', 'Page deleted');
+        $blog_category->delete();
+        return redirect()->route('admin.blog-categories.index')->with('success', 'Category deleted');
     }
 }
-

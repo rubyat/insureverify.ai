@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { decodeAndStrip } from '@/utils/strings'
 import AppLayout from '@/layouts/AppLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 
@@ -26,13 +27,7 @@ const applyFilters = () => {
   }, { preserveState: true, replace: true })
 }
 
-const formatLinkLabel = (label: string): string => {
-  if (!label) return ''
-  const stripped = label.replace(/<[^>]*>/g, '')
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = stripped
-  return textarea.value
-}
+// Use shared util for pagination label decoding
 </script>
 
 <template>
@@ -75,7 +70,7 @@ const formatLinkLabel = (label: string): string => {
       </div>
 
       <div class="flex items-center gap-2" v-if="usages.links">
-        <Link v-for="link in usages.links" :key="link.url + link.label" :href="link.url || '#'" :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]"><span>{{ formatLinkLabel(link.label) }}</span></Link>
+        <Link v-for="link in usages.links" :key="link.url + link.label" :href="link.url || '#'" :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]">{{ decodeAndStrip(link.label) }}</Link>
       </div>
     </div>
   </AppLayout>

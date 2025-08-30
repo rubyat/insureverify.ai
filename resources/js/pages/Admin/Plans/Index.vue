@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue'
+import { decodeAndStrip } from '@/utils/strings'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
@@ -39,17 +40,7 @@ const performSearch = () => {
   router.get(route('admin.plans.index'), { search: search.value }, { preserveState: true, replace: true })
 }
 
-// Safely format pagination labels coming from the server.
-// Strips any HTML tags and decodes HTML entities like &laquo; and &raquo;.
-const formatLinkLabel = (label: string): string => {
-  if (!label) return ''
-  // Remove any HTML tags that could be present
-  const stripped = label.replace(/<[^>]*>/g, '')
-  // Decode HTML entities
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = stripped
-  return textarea.value
-}
+// Use shared util to safely decode pagination labels
 </script>
 
 <template>
@@ -112,7 +103,7 @@ const formatLinkLabel = (label: string): string => {
           :href="link.url || '#'"
           :class="['px-3 py-1 rounded', { 'bg-gray-200': link.active, 'opacity-50 pointer-events-none': !link.url }]"
         >
-          {{ formatLinkLabel(link.label) }}
+          {{ decodeAndStrip(link.label) }}
         </Link>
       </div>
     </div>

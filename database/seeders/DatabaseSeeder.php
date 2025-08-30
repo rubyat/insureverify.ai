@@ -51,6 +51,10 @@ class DatabaseSeeder extends Seeder
         // Seed subscription plans
         $this->call(PlanSeeder::class);
 
+        // Seed blog categories and sample blog posts
+        $this->call(BlogCategorySeeder::class);
+        $this->call(BlogSeeder::class);
+
         // Seed a comprehensive demo subscriber with subscription, usage, invoices, items, payments, and events
         $this->call(SubscriberDemoSeeder::class);
 

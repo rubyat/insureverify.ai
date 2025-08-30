@@ -2,21 +2,26 @@
 import { useForm } from '@inertiajs/vue3'
 import { ref, watch, computed } from 'vue'
 import ImagePicker from '@/components/filemanager/ImagePicker.vue'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+// Using a simple textarea for content to avoid extra dependencies
 
 const props = defineProps<{
-  page?: any
+  blog?: any
+  categories: Array<{ id: number; title: string }>
   onSaved?: (payload: any) => void
 }>()
 
 const emit = defineEmits<{ (e: 'create'): void; (e: 'update'): void }>()
 
-type PageFormPayload = {
+type BlogFormPayload = {
   title: string
   slug: string
   status: number
   content: string
+  blog_category_id: number | null
+  author: string
+  publish_date: string | null
+  tags: string[]
+  image: string | undefined
   seo: {
     seo_title: string
     seo_index: number | boolean
@@ -28,37 +33,43 @@ type PageFormPayload = {
   }
 }
 
-const form = useForm<PageFormPayload>({
-  title: props.page?.title ?? '',
-  slug: props.page?.slug ?? '',
-  status: props.page?.status ?? 1,
-  content: props.page?.content ?? '',
+const form = useForm<BlogFormPayload>({
+  title: props.blog?.title ?? '',
+  slug: props.blog?.slug ?? '',
+  status: props.blog?.status ?? 1,
+  content: props.blog?.content ?? '',
+  blog_category_id: props.blog?.blog_category_id ?? (props.blog?.category?.id ?? null),
+  author: props.blog?.author ?? '',
+  publish_date: props.blog?.publish_date ? new Date(props.blog.publish_date).toISOString().slice(0,16) : null,
+  tags: Array.isArray(props.blog?.tags) ? props.blog?.tags : [],
+  image: props.blog?.image ?? undefined,
   seo: {
-    seo_title: props.page?.seo?.seo_title ?? '',
-    seo_index: props.page?.seo?.seo_index ?? 1,
-    seo_keyword: props.page?.seo?.seo_keyword ?? '',
-    seo_description: props.page?.seo?.seo_description ?? '',
-    seo_image: props.page?.seo?.seo_image ?? undefined,
-    canonical_url: props.page?.seo?.canonical_url ?? '',
-    meta_json: props.page?.seo?.meta_json ?? {},
+    seo_title: props.blog?.seo?.seo_title ?? '',
+    seo_index: props.blog?.seo?.seo_index ?? 1,
+    seo_keyword: props.blog?.seo?.seo_keyword ?? '',
+    seo_description: props.blog?.seo?.seo_description ?? '',
+    seo_image: props.blog?.seo?.seo_image ?? undefined,
+    canonical_url: props.blog?.seo?.canonical_url ?? '',
+    meta_json: props.blog?.seo?.meta_json ?? {},
   },
 })
 
-// Transform payload to coerce IDs to integers or null
-form.transform((data: any) => {
-  return {
-    ...data,
-    seo: {
-      ...data.seo,
-      // cast boolean-like to 0/1 for backend if necessary
-      seo_index: data.seo?.seo_index === true ? 1 : data.seo?.seo_index === false ? 0 : Number(data.seo?.seo_index ?? 1),
-    },
-  }
-})
+// Keep complex `template` data outside of Inertia form payload to satisfy type constraints
+const template = ref<Record<string, any> | null>(props.blog?.template ?? null)
+
+form.transform((data: any) => ({
+  ...data,
+  // Inject template back into the submitted payload
+  template: template.value ?? null,
+  blog_category_id: data.blog_category_id ? Number(data.blog_category_id) : null,
+  tags: (data.tags || []).filter((t: any) => !!t && String(t).trim() !== ''),
+  seo: {
+    ...data.seo,
+    seo_index: data.seo?.seo_index === true ? 1 : data.seo?.seo_index === false ? 0 : Number(data.seo?.seo_index ?? 1),
+  },
+}))
 
 const submitting = ref(false)
-
-// Simpler computed to avoid template expanding complex error mapped types
 const hasErrors = computed(() => Object.keys((form.errors as unknown as Record<string, any>) || {}).length > 0)
 
 // Slug auto-generation with manual override
@@ -72,7 +83,6 @@ function slugify(input: string): string {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
-// Auto-generate when title changes unless user edited slug
 watch(
   () => form.title,
   (v) => {
@@ -91,10 +101,10 @@ function regenerateSlug() {
 
 function submitCreate() {
   submitting.value = true
-  form.post(route('admin.pages.store'), {
+  form.post(route('admin.blogs.store'), {
     onFinish: () => (submitting.value = false),
-    onSuccess: (page) => {
-      props.onSaved?.(page)
+    onSuccess: (payload) => {
+      props.onSaved?.(payload)
       emit('create')
     },
     preserveScroll: true,
@@ -103,33 +113,26 @@ function submitCreate() {
 
 function submitUpdate(id: number) {
   submitting.value = true
-  form.put(route('admin.pages.update', id), {
+  form.put(route('admin.blogs.update', id), {
     onFinish: () => (submitting.value = false),
-    onSuccess: () => {
-      emit('update')
-    },
+    onSuccess: () => emit('update'),
     preserveScroll: true,
   })
 }
 
- 
+// Content is a plain textarea; no special handling needed beyond v-model
 
-const quillContent = ref(form.content)
-watch(quillContent, (v) => (form.content = v ?? ''))
+// Tags UI: provide a comma-separated helper field
+const tagsInput = ref<string>((form.tags || []).join(', '))
+watch(tagsInput, (v) => (form.tags = (v || '').split(',').map((s) => s.trim()).filter(Boolean)))
 
-// SEO Modal state
+// SEO
 const seoModalOpen = ref(false)
 const seoActiveTab = ref<'general' | 'facebook' | 'twitter'>('general')
-
-// Ensure defaults for meta_json buckets
 if (!form.seo.meta_json) form.seo.meta_json = {}
 if (!form.seo.meta_json.facebook) form.seo.meta_json.facebook = {}
 if (!form.seo.meta_json.twitter) form.seo.meta_json.twitter = {}
-
-// Placeholder for SEO image comes from backend (Seo::$appends['placeholder'])
-const seoPlaceholder = computed(() => (props.page?.seo?.placeholder as string | undefined) ?? '/storage/placeholder.png')
-
-// Helpers to bind facebook/twitter meta_json payloads without side effects in getters
+const seoPlaceholder = computed(() => (props.blog?.seo?.placeholder as string | undefined) ?? '/storage/placeholder.png')
 const fb = computed({
   get: () => form.seo.meta_json.facebook,
   set: (v: any) => (form.seo.meta_json = { ...form.seo.meta_json, facebook: v }),
@@ -161,9 +164,35 @@ const tw = computed({
           </div>
           <div v-if="form.errors.slug" class="text-red-600 text-sm mt-1">{{ form.errors.slug }}</div>
         </div>
-        <div class="hidden">
-          <label class="block text-sm font-medium">Content (fallback)</label>
-          <QuillEditor v-model:content="quillContent" contentType="html" theme="snow" class="mt-1 bg-white" />
+        <div>
+          <label class="block text-sm font-medium">Category</label>
+          <select v-model.number="form.blog_category_id" class="mt-1 w-full rounded border px-3 py-2">
+            <option :value="null">— Select —</option>
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.title }}</option>
+          </select>
+          <div v-if="form.errors.blog_category_id" class="text-red-600 text-sm mt-1">{{ form.errors.blog_category_id }}</div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium">Author</label>
+            <input v-model="form.author" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Publish Date</label>
+            <input v-model="form.publish_date" type="datetime-local" class="mt-1 w-full rounded border px-3 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Tags</label>
+          <input v-model="tagsInput" type="text" class="mt-1 w-full rounded border px-3 py-2" placeholder="comma,separated,tags" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Featured Image</label>
+          <ImagePicker v-model="form.image" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Content</label>
+          <textarea v-model="form.content" class="mt-1 w-full rounded border px-3 py-2" rows="8"></textarea>
         </div>
       </div>
 
@@ -172,11 +201,10 @@ const tw = computed({
           <h3 class="font-medium">SEO</h3>
           <button type="button" class="text-blue-600 hover:underline" @click="seoModalOpen = true">Edit</button>
         </div>
-        <!-- Preview like screenshot -->
         <div class="border rounded p-3">
           <div class="text-xs text-gray-500">Search engine</div>
           <div class="mt-2">
-            <div class="text-sm text-gray-600 truncate">{{ (props.page ? route('home') + '/' + form.slug : '') }}</div>
+            <div class="text-sm text-gray-600 truncate">{{ (props.blog ? route('home') + '/blog/' + form.slug : '') }}</div>
             <div class="text-xl text-blue-700 leading-tight">{{ form.seo.seo_title || form.title }}</div>
             <div class="text-gray-700">{{ form.seo.seo_description }}</div>
           </div>
@@ -195,8 +223,8 @@ const tw = computed({
           </select>
         </div>
         <div class="pt-2">
-          <button v-if="!props.page" :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitCreate">Create</button>
-          <button v-else :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitUpdate(props.page.id)">Save</button>
+          <button v-if="!props.blog" :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitCreate">Create</button>
+          <button v-else :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitUpdate(props.blog.id)">Save</button>
         </div>
       </div>
     </div>
@@ -282,4 +310,3 @@ const tw = computed({
     </div>
   </div>
 </template>
-

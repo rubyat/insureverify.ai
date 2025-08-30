@@ -12,6 +12,7 @@ use App\Http\Controllers\App\BillingController as AppBillingController;
 use App\Http\Controllers\App\UpgradeController as AppUpgradeController;
 use App\Http\Controllers\App\VerificationController as AppVerificationController;
 use App\Http\Controllers\Cron\SubscriptionRenewalController;
+use App\Http\Controllers\BlogPublicController;
 
 // Public marketing site routes
 Route::get('/', [PagesController::class, 'home'])->name('home');
@@ -35,6 +36,11 @@ Route::get('/pricing', function () {
 Route::get('/plans', [PublicPlanController::class, 'index'])->name('plans.index');
 // Public plan signup/preview page
 Route::get('/plan/{slug}', [PublicPlanController::class, 'show'])->name('plan.show');
+
+// Public Blog
+Route::get('/blog', [BlogPublicController::class, 'index'])->name('blog.index');
+Route::get('/blog/category/{category}', [BlogPublicController::class, 'index'])->name('blog.category');
+Route::get('/blog/{slug}', [BlogPublicController::class, 'show'])->name('blog.show');
 
 // Frontend (authenticated customer) routes
 Route::middleware(['auth'])->group(function () {

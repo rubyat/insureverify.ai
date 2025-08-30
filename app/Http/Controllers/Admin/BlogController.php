@@ -1,44 +1,54 @@
 <?php
 
-namespace App\Http\Controllers\PageBuilder;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Page;
-use App\Models\Seo;
+use App\Models\Blog;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
-class PageController extends Controller
+class BlogController extends Controller
 {
     public function index(Request $request)
     {
         $q = $request->string('q');
-        $pages = Page::query()
+        $blogs = Blog::query()->with('category')
             ->when($q, fn($qq) => $qq->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
             ->latest('updated_at')
             ->paginate(20)
             ->withQueryString();
 
-        return Inertia::render('Admin/Pages/Index', [
-            'pages' => $pages,
+        return Inertia::render('Admin/Blogs/Index', [
+            'blogs' => $blogs,
             'filters' => ['q' => $q],
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Admin/Pages/Create');
+        $categories = \App\Models\BlogCategory::query()
+            ->orderBy('title')
+            ->get(['id','title']);
+        return Inertia::render('Admin/Blogs/Create', [
+            'categories' => $categories,
+        ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:pages,slug'],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:blogs,slug'],
             'status' => ['required', Rule::in([0,1])],
             'content' => ['nullable', 'string'],
+            'template' => ['nullable', 'array'],
+            'blog_category_id' => ['nullable', 'integer', 'exists:blog_categories,id'],
+            'author' => ['nullable', 'string', 'max:255'],
+            'publish_date' => ['nullable', 'date'],
+            'tags' => ['nullable', 'array'],
+            'image' => ['nullable', 'string'],
             'seo' => ['array'],
             'seo.seo_title' => ['nullable', 'string', 'max:255'],
             'seo.seo_index' => ['nullable', 'boolean'],
@@ -55,29 +65,39 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
-        $page = Page::create(collect($data)->except('seo')->all());
+        $blog = Blog::create(collect($data)->except('seo')->all());
         if (!empty($data['seo'])) {
-            $page->seo()->create($data['seo']);
+            $blog->seo()->create($data['seo']);
         }
 
-        return redirect()->route('admin.pages.edit', $page)->with('success', 'Page created');
+        return redirect()->route('admin.blogs.edit', $blog)->with('success', 'Blog created');
     }
 
-    public function edit(Page $page)
+    public function edit(Blog $blog)
     {
-        $page->load('seo');
-        return Inertia::render('Admin/Pages/Edit', [
-            'page' => $page,
+        $blog->load('seo', 'category');
+        $categories = \App\Models\BlogCategory::query()
+            ->orderBy('title')
+            ->get(['id','title']);
+        return Inertia::render('Admin/Blogs/Edit', [
+            'blog' => $blog,
+            'categories' => $categories,
         ]);
     }
 
-    public function update(Request $request, Page $page)
+    public function update(Request $request, Blog $blog)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('pages', 'slug')->ignore($page->id)],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('blogs', 'slug')->ignore($blog->id)],
             'status' => ['required', Rule::in([0,1])],
             'content' => ['nullable', 'string'],
+            'template' => ['nullable', 'array'],
+            'blog_category_id' => ['nullable', 'integer', 'exists:blog_categories,id'],
+            'author' => ['nullable', 'string', 'max:255'],
+            'publish_date' => ['nullable', 'date'],
+            'tags' => ['nullable', 'array'],
+            'image' => ['nullable', 'string'],
             'seo' => ['array'],
             'seo.seo_title' => ['nullable', 'string', 'max:255'],
             'seo.seo_index' => ['nullable', 'boolean'],
@@ -94,17 +114,15 @@ class PageController extends Controller
             $data['slug'] = Str::slug($data['title']);
         }
 
-        $page->update(collect($data)->except('seo')->all());
-        // Use morphOne constraints; no need to pass foreign keys
-        $page->seo()->updateOrCreate([], $data['seo'] ?? []);
+        $blog->update(collect($data)->except('seo')->all());
+        $blog->seo()->updateOrCreate([], $data['seo'] ?? []);
 
-        return back()->with('success', 'Page updated');
+        return back()->with('success', 'Blog updated');
     }
 
-    public function destroy(Page $page)
+    public function destroy(Blog $blog)
     {
-        $page->delete();
-        return redirect()->route('admin.pages.index')->with('success', 'Page deleted');
+        $blog->delete();
+        return redirect()->route('admin.blogs.index')->with('success', 'Blog deleted');
     }
 }
-

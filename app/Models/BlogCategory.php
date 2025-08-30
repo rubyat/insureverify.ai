@@ -6,33 +6,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Page extends Model
+class BlogCategory extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'slug', 'title', 'status', 'content', 'template'
+        'slug', 'title', 'status', 'content'
     ];
 
     protected $casts = [
-        'template' => 'array',
         'status' => 'integer',
     ];
 
     public function seo()
     {
-        // Polymorphic one-to-one: Seo::object() morphTo uses object_model/object_id
+        // Polymorphic one-to-one with custom columns used by Seo
         return $this->morphOne(Seo::class, 'object', 'object_model', 'object_id');
     }
 
     protected static function booted(): void
     {
-        static::deleting(function (Page $page) {
-            // If force deleting, remove related SEO. Keep SEO on soft delete so it can be restored.
-            if (method_exists($page, 'isForceDeleting') && $page->isForceDeleting()) {
-                $page->seo()->delete();
+        static::deleting(function (BlogCategory $model) {
+            if (method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
+                $model->seo()->delete();
             }
         });
     }
 }
-

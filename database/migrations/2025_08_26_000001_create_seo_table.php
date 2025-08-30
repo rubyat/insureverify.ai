@@ -9,16 +9,18 @@ return new class extends Migration {
     {
         Schema::create('seo', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('page_id');
+            $table->unsignedBigInteger('object_id');
+            $table->string('object_model');
             $table->string('seo_title')->nullable();
+            $table->boolean('seo_index')->default(true);
+            $table->text('seo_keyword')->nullable();
             $table->text('seo_description')->nullable();
-            $table->unsignedBigInteger('seo_image_id')->nullable();
+            $table->text('seo_image')->nullable();
             $table->string('canonical_url', 500)->nullable();
             $table->json('meta_json')->nullable();
             $table->timestamps();
 
-            $table->index('page_id', 'idx_seo_page');
-            $table->foreign('page_id')->references('id')->on('pages')->onDelete('cascade');
+            $table->index(['object_model', 'object_id'], 'idx_seo_object');
         });
     }
 

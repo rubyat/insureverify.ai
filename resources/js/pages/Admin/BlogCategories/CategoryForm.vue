@@ -6,13 +6,13 @@ import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const props = defineProps<{
-  page?: any
+  category?: any
   onSaved?: (payload: any) => void
 }>()
 
 const emit = defineEmits<{ (e: 'create'): void; (e: 'update'): void }>()
 
-type PageFormPayload = {
+type CategoryFormPayload = {
   title: string
   slug: string
   status: number
@@ -28,37 +28,31 @@ type PageFormPayload = {
   }
 }
 
-const form = useForm<PageFormPayload>({
-  title: props.page?.title ?? '',
-  slug: props.page?.slug ?? '',
-  status: props.page?.status ?? 1,
-  content: props.page?.content ?? '',
+const form = useForm<CategoryFormPayload>({
+  title: props.category?.title ?? '',
+  slug: props.category?.slug ?? '',
+  status: props.category?.status ?? 1,
+  content: props.category?.content ?? '',
   seo: {
-    seo_title: props.page?.seo?.seo_title ?? '',
-    seo_index: props.page?.seo?.seo_index ?? 1,
-    seo_keyword: props.page?.seo?.seo_keyword ?? '',
-    seo_description: props.page?.seo?.seo_description ?? '',
-    seo_image: props.page?.seo?.seo_image ?? undefined,
-    canonical_url: props.page?.seo?.canonical_url ?? '',
-    meta_json: props.page?.seo?.meta_json ?? {},
+    seo_title: props.category?.seo?.seo_title ?? '',
+    seo_index: props.category?.seo?.seo_index ?? 1,
+    seo_keyword: props.category?.seo?.seo_keyword ?? '',
+    seo_description: props.category?.seo?.seo_description ?? '',
+    seo_image: props.category?.seo?.seo_image ?? undefined,
+    canonical_url: props.category?.seo?.canonical_url ?? '',
+    meta_json: props.category?.seo?.meta_json ?? {},
   },
 })
 
-// Transform payload to coerce IDs to integers or null
-form.transform((data: any) => {
-  return {
-    ...data,
-    seo: {
-      ...data.seo,
-      // cast boolean-like to 0/1 for backend if necessary
-      seo_index: data.seo?.seo_index === true ? 1 : data.seo?.seo_index === false ? 0 : Number(data.seo?.seo_index ?? 1),
-    },
-  }
-})
+form.transform((data: any) => ({
+  ...data,
+  seo: {
+    ...data.seo,
+    seo_index: data.seo?.seo_index === true ? 1 : data.seo?.seo_index === false ? 0 : Number(data.seo?.seo_index ?? 1),
+  },
+}))
 
 const submitting = ref(false)
-
-// Simpler computed to avoid template expanding complex error mapped types
 const hasErrors = computed(() => Object.keys((form.errors as unknown as Record<string, any>) || {}).length > 0)
 
 // Slug auto-generation with manual override
@@ -72,7 +66,6 @@ function slugify(input: string): string {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
-// Auto-generate when title changes unless user edited slug
 watch(
   () => form.title,
   (v) => {
@@ -91,10 +84,10 @@ function regenerateSlug() {
 
 function submitCreate() {
   submitting.value = true
-  form.post(route('admin.pages.store'), {
+  form.post(route('admin.blog-categories.store'), {
     onFinish: () => (submitting.value = false),
-    onSuccess: (page) => {
-      props.onSaved?.(page)
+    onSuccess: (payload) => {
+      props.onSaved?.(payload)
       emit('create')
     },
     preserveScroll: true,
@@ -103,33 +96,23 @@ function submitCreate() {
 
 function submitUpdate(id: number) {
   submitting.value = true
-  form.put(route('admin.pages.update', id), {
+  form.put(route('admin.blog-categories.update', id), {
     onFinish: () => (submitting.value = false),
-    onSuccess: () => {
-      emit('update')
-    },
+    onSuccess: () => emit('update'),
     preserveScroll: true,
   })
 }
 
- 
-
 const quillContent = ref(form.content)
 watch(quillContent, (v) => (form.content = v ?? ''))
 
-// SEO Modal state
+// SEO
 const seoModalOpen = ref(false)
 const seoActiveTab = ref<'general' | 'facebook' | 'twitter'>('general')
-
-// Ensure defaults for meta_json buckets
 if (!form.seo.meta_json) form.seo.meta_json = {}
 if (!form.seo.meta_json.facebook) form.seo.meta_json.facebook = {}
 if (!form.seo.meta_json.twitter) form.seo.meta_json.twitter = {}
-
-// Placeholder for SEO image comes from backend (Seo::$appends['placeholder'])
-const seoPlaceholder = computed(() => (props.page?.seo?.placeholder as string | undefined) ?? '/storage/placeholder.png')
-
-// Helpers to bind facebook/twitter meta_json payloads without side effects in getters
+const seoPlaceholder = computed(() => (props.category?.seo?.placeholder as string | undefined) ?? '/storage/placeholder.png')
 const fb = computed({
   get: () => form.seo.meta_json.facebook,
   set: (v: any) => (form.seo.meta_json = { ...form.seo.meta_json, facebook: v }),
@@ -161,8 +144,8 @@ const tw = computed({
           </div>
           <div v-if="form.errors.slug" class="text-red-600 text-sm mt-1">{{ form.errors.slug }}</div>
         </div>
-        <div class="hidden">
-          <label class="block text-sm font-medium">Content (fallback)</label>
+        <div>
+          <label class="block text-sm font-medium">Content</label>
           <QuillEditor v-model:content="quillContent" contentType="html" theme="snow" class="mt-1 bg-white" />
         </div>
       </div>
@@ -172,11 +155,10 @@ const tw = computed({
           <h3 class="font-medium">SEO</h3>
           <button type="button" class="text-blue-600 hover:underline" @click="seoModalOpen = true">Edit</button>
         </div>
-        <!-- Preview like screenshot -->
         <div class="border rounded p-3">
           <div class="text-xs text-gray-500">Search engine</div>
           <div class="mt-2">
-            <div class="text-sm text-gray-600 truncate">{{ (props.page ? route('home') + '/' + form.slug : '') }}</div>
+            <div class="text-sm text-gray-600 truncate">{{ (props.category ? route('home') + '/blog/' + form.slug : '') }}</div>
             <div class="text-xl text-blue-700 leading-tight">{{ form.seo.seo_title || form.title }}</div>
             <div class="text-gray-700">{{ form.seo.seo_description }}</div>
           </div>
@@ -195,8 +177,8 @@ const tw = computed({
           </select>
         </div>
         <div class="pt-2">
-          <button v-if="!props.page" :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitCreate">Create</button>
-          <button v-else :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitUpdate(props.page.id)">Save</button>
+          <button v-if="!props.category" :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitCreate">Create</button>
+          <button v-else :disabled="submitting" class="w-full rounded bg-primary px-4 py-2 text-white" @click="submitUpdate(props.category.id)">Save</button>
         </div>
       </div>
     </div>
@@ -282,4 +264,3 @@ const tw = computed({
     </div>
   </div>
 </template>
-
