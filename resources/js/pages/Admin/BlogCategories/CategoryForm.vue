@@ -158,7 +158,7 @@ const tw = computed({
         <div class="border rounded p-3">
           <div class="text-xs text-gray-500">Search engine</div>
           <div class="mt-2">
-            <div class="text-sm text-gray-600 truncate">{{ (props.category ? route('home') + '/blog/' + form.slug : '') }}</div>
+            <div class="text-sm text-gray-600 truncate">{{ (props.category ? route('home') + '/blog/category/' + form.slug : '') }}</div>
             <div class="text-xl text-blue-700 leading-tight">{{ form.seo.seo_title || form.title }}</div>
             <div class="text-gray-700">{{ form.seo.seo_description }}</div>
           </div>

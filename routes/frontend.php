@@ -13,6 +13,8 @@ use App\Http\Controllers\App\UpgradeController as AppUpgradeController;
 use App\Http\Controllers\App\VerificationController as AppVerificationController;
 use App\Http\Controllers\Cron\SubscriptionRenewalController;
 use App\Http\Controllers\BlogPublicController;
+use App\Http\Controllers\PagePublicController;
+use App\Http\Controllers\SitemapController;
 
 // Public marketing site routes
 Route::get('/', [PagesController::class, 'home'])->name('home');
@@ -77,3 +79,11 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
 // Cron endpoint to process subscription renewals (token protected)
 Route::match(['GET','POST'], '/cron/subscriptions/renew', [SubscriptionRenewalController::class, 'run'])
     ->name('cron.subscriptions.renew');
+
+// SEO: Sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Public CMS Pages (must be at the very end to avoid conflicts)
+Route::get('/{slug}', [PagePublicController::class, 'show'])
+    ->where('slug', '^[a-z0-9-]+$')
+    ->name('page.show');

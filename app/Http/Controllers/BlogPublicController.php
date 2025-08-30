@@ -13,7 +13,9 @@ class BlogPublicController extends Controller
 {
     public function index(Request $request, ?string $category = null): Response
     {
-        $q = $request->string('q');
+
+        // Ensure $q is a plain string (Request::string returns Stringable)
+        $q = (string) $request->string('q');
 
         $categories = BlogCategory::query()
             ->where('status', 1)
@@ -23,7 +25,13 @@ class BlogPublicController extends Controller
         $blogs = Blog::query()
             ->with('category')
             ->where('status', 1)
-            ->when($q, fn($qq) => $qq->where('title', 'like', "%{$q}%")->orWhere('slug', 'like', "%{$q}%"))
+            // Apply search only when non-empty and group OR conditions properly
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($w) use ($q) {
+                    $w->where('title', 'like', "%{$q}%")
+                      ->orWhere('slug', 'like', "%{$q}%");
+                });
+            })
             ->when($category, function ($query) use ($category) {
                 $query->whereHas('category', function ($q) use ($category) {
                     $q->where('slug', $category);

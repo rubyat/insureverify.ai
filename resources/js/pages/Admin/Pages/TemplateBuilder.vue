@@ -17,6 +17,7 @@ const props = defineProps<{
 const catalog = ref<any[]>([])
 const tpl = ref<Record<string, any>>({ ...props.template })
 const showAddPanel = ref<boolean>(false)
+const isMaximizedRight = ref<boolean>(false)
 
 // Load blocks catalog
 fetch(props.blocksEndpoint)
@@ -194,7 +195,7 @@ async function openLivePreview() {
 
       <div class="grid grid-cols-12 gap-4 p-4">
         <!-- Left: Layers + Add -->
-        <aside class="col-span-3 space-y-4">
+        <aside class="col-span-3 space-y-4" v-show="!isMaximizedRight">
           <!-- Layers Panel -->
           <div v-if="!showAddPanel" class="min-h-[70vh] rounded border bg-white flex flex-1 flex-col">
             <div class="px-3 py-2 font-medium border-b">Layers</div>
@@ -254,7 +255,7 @@ async function openLivePreview() {
         </aside>
 
         <!-- Center: Preview (Client-side Vue) -->
-        <main :class="showRight ? 'col-span-6' : 'col-span-9'">
+        <main :class="showRight ? 'col-span-6' : 'col-span-9'" v-show="!isMaximizedRight">
           <div class="rounded border bg-white h-[70vh] overflow-auto">
             <div class="px-3 py-2 font-medium border-b flex items-center justify-between">
               <div>Preview</div>
@@ -267,11 +268,18 @@ async function openLivePreview() {
         </main>
 
         <!-- Right: Form -->
-        <section v-if="showRight" class="col-span-3">
+        <section v-if="showRight" :class="isMaximizedRight ? 'col-span-12' : 'col-span-3'">
           <div class="rounded border bg-white">
             <div class="px-3 py-2 font-medium border-b flex items-center justify-between">
-              <div>Block Settings</div>
-              <button class="text-red-600 text-sm px-2" @click="removeSelected" :disabled="!selectedNode || selectedNodeId==='ROOT'">Remove</button>
+              <div class="flex items-center gap-2">
+                <div>Block Settings</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="text-gray-700 text-sm px-2" @click="isMaximizedRight = !isMaximizedRight" :title="isMaximizedRight ? 'Restore' : 'Maximize'">
+                  <i :class="isMaximizedRight ? 'fa-solid fa-down-left-and-up-right-to-center' : 'fa-solid fa-up-right-and-down-left-from-center'"></i>
+                </button>
+                <button class="text-red-600 text-sm px-2" @click="removeSelected" :disabled="!selectedNode || selectedNodeId==='ROOT'">Remove</button>
+              </div>
             </div>
             <div class="p-3 space-y-3" v-if="selectedNode">
               <DynamicForm :node="selectedNode" :block="findBlock(selectedNode.type)" :thumb-endpoint="props.blocksThumbEndpoint" @update:node="onUpdateNode" />

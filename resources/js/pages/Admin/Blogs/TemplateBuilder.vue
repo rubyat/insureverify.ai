@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
-import PagesTemplateBuilder from '@/pages/Admin/Pages/TemplateBuilder.vue'
+import TemplateBuilderCore from '@/pages/Admin/Builder/TemplateBuilderCore.vue'
 
 const props = defineProps<{
   page: any
@@ -21,7 +21,7 @@ const props = defineProps<{
     { title: `Builder: ${props.page?.title}` , href: '#' }
   ]">
     <div class="p-6">
-      <PagesTemplateBuilder
+      <TemplateBuilderCore
         :page="props.page"
         :template="props.template"
         :blocks-endpoint="props.blocksEndpoint"
