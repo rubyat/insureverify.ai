@@ -161,7 +161,7 @@ class PagesController extends Controller
                 'resetDate' => $resetDate,
             ],
             'history' => $history,
-            'upgradeUrl' => route('plans.index'),
+            'upgradeUrl' => route('app.upgrade'),
         ]);
     }
 

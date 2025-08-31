@@ -2,149 +2,300 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import SiteLayout from '@/layouts/SiteLayout.vue';
 import CustomerLayout from '@/layouts/customer/Layout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import { computed, ref, nextTick } from 'vue';
+import VerificationCard from '@/components/verification/VerificationCard.vue';
 
-const props = defineProps<{
-  remainingUploads: number;
-  cycleResetDate: string;
-  queue: Array<{ id: number; name: string; size: string; progress: number; error?: string }>;
-  atLimit: boolean;
-  upgradeUrl: string;
-}>();
+type VerificationType = 'license' | 'insurance' | 'face';
+
+interface VerificationProps {
+    remainingUploads: number;
+    cycleResetDate?: string | null;
+    atLimit?: boolean;
+}
+
+// Use the props in the component
+const { remainingUploads, cycleResetDate } = defineProps<VerificationProps>();
+
+// Local reactive copy so we can update the header immediately after verify
+const remaining = ref<number>(remainingUploads);
+
+// Tab state
+const activeTab = ref<VerificationType>('license');
+const tabs = [
+    { id: 'license', name: 'License Verification', icon: 'fa-id-card' },
+    { id: 'insurance', name: 'Insurance Verification', icon: 'fa-file-contract' },
+    { id: 'face', name: 'Face Verification', icon: 'fa-user' },
+] as const;
+
+// Form state
+type VerificationForm = {
+    type: VerificationType;
+    licenseFront?: File;
+    licenseBack?: File;
+    insuranceDoc?: File;
+    faceImage?: File;
+}
+
+const form = useForm<VerificationForm>({
+    type: 'license',
+    licenseFront: undefined,
+    licenseBack: undefined,
+    insuranceDoc: undefined,
+    faceImage: undefined,
+});
+
+
+// UI state
+const isUploading = ref<Record<VerificationType, boolean>>({
+    license: false,
+    insurance: false,
+    face: false
+});
+
+const uploadStatus = ref<Record<VerificationType, { progress: number; status: 'idle' | 'uploading' | 'success' | 'error' }>>({
+    license: { progress: 0, status: 'idle' },
+    insurance: { progress: 0, status: 'idle' },
+    face: { progress: 0, status: 'idle' }
+});
+
+const isAnalyzing = ref(false);
+const errorMsg = ref('');
+const analysisResult = ref<any>(null);
+const processingSection = ref<HTMLElement | null>(null);
+const resultsSection = ref<HTMLElement | null>(null);
+
+// Analysis simulation
+const analyseGenerationProgress = ref(0);
+const analyseGenerationStatus = ref('Starting analysis...');
+const analyseSteps = [
+    { emoji: '📄', label: 'Uploading' },
+    { emoji: '🔍', label: 'Analyzing' },
+    { emoji: '🔢', label: 'Processing' },
+    { emoji: '✅', label: 'Validating' },
+    { emoji: '📊', label: 'Complete' },
+];
+
+const stepColors = [
+    '#3b82f6', // blue-500
+    '#8b5cf6', // violet-500
+    '#ec4899', // pink-500
+    '#f59e0b', // amber-500
+    '#10b981', // emerald-500
+];
 
 const page = usePage();
 const Layout = computed(() => (page.props as any)?.auth?.is_admin ? AppLayout : SiteLayout);
-const breadcrumbItems = [{ title: 'Verification', href: '/app/verification' }];
-const csrf = computed(() => {
-  const fromPage = (page.props as any)?.csrf_token;
-  if (fromPage) return fromPage as string;
-  const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
-  return meta?.content || '';
-});
-
-const fileInput = ref<HTMLInputElement | null>(null);
-const isDragging = ref(false);
-const form = useForm<{ image: File | null; upload_from: string; _token: string }>({
-  image: null,
-  upload_from: 'verification',
-  _token: csrf.value
-});
-
-// Flow state
-const uploaded = ref(false);
-const imageUrl = ref<string | null>(null);
-const filePath = ref<string | null>(null);
-const processing = ref(false);
-const result = ref<any | null>(null);
-const errorMsg = ref<string | null>(null);
-
-// analyse-style processing UI state
-const analyseGenerationProgress = ref(0);
-const analyseGenerationStatus = ref('Starting analysis…');
-const intervalRef = ref<number | null>(null);
-
-// Steps (used for both UI display and status updates)
-const analyseSteps = [
-  { emoji: '👁️', label: 'Analyzing visual data…' },
-  { emoji: '🔠', label: 'Running OCR…' },
-  { emoji: '🗂️', label: 'Matching policy records…' },
-  { emoji: '🛡️', label: 'Evaluating fraud signals…' },
-  { emoji: '✅', label: 'Finalizing results…' },
+const breadcrumbItems = [
+    { title: 'Dashboard', href: route('app.dashboard') },
+    { title: 'Verification', href: route('app.verification') },
 ];
-const stepColors = ['#3b82f6', '#10b981', '#f59e0b', '#a855f7', '#ef4444'];
 
-function onChooseFile() {
-  fileInput.value?.click();
+// Computed properties
+const currentVerificationType = computed(() => {
+    return tabs.find(tab => tab.id === activeTab.value)?.name || '';
+});
+
+const canVerify = computed(() => {
+    switch (activeTab.value) {
+        case 'license':
+            return !!form.licenseFront && !!form.licenseBack;
+        case 'insurance':
+            return !!form.insuranceDoc;
+        case 'face':
+            return !!form.faceImage;
+        default:
+            return false;
+    }
+});
+
+//
+
+// Methods
+function resetVerification() {
+    analysisResult.value = null;
+    const tab = activeTab.value;
+    uploadStatus.value[tab] = { progress: 0, status: 'idle' };
+
+    switch (tab) {
+        case 'license':
+            form.licenseFront = undefined;
+            form.licenseBack = undefined;
+            break;
+        case 'insurance':
+            form.insuranceDoc = undefined;
+            break;
+        case 'face':
+            form.faceImage = undefined;
+            break;
+    }
+    errorMsg.value = '';
 }
 
-function onFileChanged(e: Event) {
-  const target = e.target as HTMLInputElement;
-  const file = target.files?.[0] || null;
-  form.image = file;
-  // Auto-upload on file choose
-  if (form.image && !props.atLimit) submit();
+function getCsrfToken(): string | null {
+    const el = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+    return el?.content ?? null;
 }
 
-async function submit() {
-  if (!form.image) return;
-  errorMsg.value = null;
-  try {
+function getActiveFile(): File | undefined {
+    switch (activeTab.value) {
+        case 'license':
+            return form.licenseFront;
+        case 'insurance':
+            return form.insuranceDoc;
+        case 'face':
+            return form.faceImage;
+        default:
+            return undefined;
+    }
+}
+
+async function uploadFile(): Promise<{ path: string }> {
+    const file = getActiveFile();
+    if (!file) throw new Error('No file selected');
+
     const fd = new FormData();
-    fd.append('image', form.image);
-    fd.append('upload_from', form.upload_from);
-    const resp = await fetch(route('app.verification.upload'), {
-      method: 'POST',
-      headers: { 'X-CSRF-TOKEN': csrf.value },
-      body: fd,
-    });
-    if (!resp.ok) throw new Error('Upload failed');
-    const data = await resp.json();
-    uploaded.value = true;
-    imageUrl.value = data.url;
-    filePath.value = data.path;
-    // Reset input
-    form.reset();
-    if (fileInput.value) fileInput.value.value = '';
+    fd.append('image', file);
+    fd.append('upload_from', activeTab.value);
 
-    // Start verification call with processing animation
-    processing.value = true;
+    const csrf = getCsrfToken();
+    const res = await fetch(route('app.verification.upload'), {
+        method: 'POST',
+        headers: csrf ? { 'X-CSRF-TOKEN': csrf } : undefined,
+        body: fd,
+        credentials: 'same-origin',
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Upload failed');
+    }
+    const data = await res.json();
+    return { path: data.path ?? data.main_path };
+}
+ 
+async function startAnalysisWithServer(path: string) {
+    // Show processing UI
+    isAnalyzing.value = true;
     analyseGenerationProgress.value = 0;
-    analyseGenerationStatus.value = 'Uploading image…';
 
-    // Progress simulation while waiting for backend (caps at 95%)
-    let stepIdx = 0;
-    intervalRef.value = window.setInterval(() => {
-      if (analyseGenerationProgress.value < 95) {
-        analyseGenerationProgress.value += Math.random() * 6 + 2; // 2–8%
-        if (analyseGenerationProgress.value > 95) analyseGenerationProgress.value = 95;
-      }
-      analyseGenerationStatus.value = analyseSteps[Math.min(stepIdx, analyseSteps.length - 1)].label;
-      stepIdx++;
-    }, 700);
-    const vresp = await fetch(route('app.verification.verify'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrf.value,
-      },
-      body: JSON.stringify({ path: filePath.value }),
+    // Begin server verification
+    const csrf = getCsrfToken();
+    const verifyPromise = fetch(route('app.verification.verify'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({ path }),
+        credentials: 'same-origin',
     });
-    if (!vresp.ok) throw new Error('Verification failed');
-    result.value = await vresp.json();
-    analyseGenerationProgress.value = 100;
-    analyseGenerationStatus.value = 'Completed';
-  } catch (e: any) {
-    errorMsg.value = e?.message || 'Something went wrong';
-  } finally {
-    // stop progress interval
-    try { if (intervalRef.value) clearInterval(intervalRef.value); } catch {}
-    processing.value = false;
-    // Allow the UI to show 100% briefly
-    setTimeout(() => {
-      analyseGenerationProgress.value = 0;
-      analyseGenerationStatus.value = 'Starting analysis…';
-    }, 600);
-  }
+
+    // Local progress animation while waiting for server
+    const anim = setInterval(() => {
+        const target = 90;
+        const inc = Math.random() * 5;
+        if (analyseGenerationProgress.value < target) {
+            analyseGenerationProgress.value = Math.min(target, analyseGenerationProgress.value + inc);
+        }
+
+        if (analyseGenerationProgress.value < 20) {
+            analyseGenerationStatus.value = 'Uploading files...';
+        } else if (analyseGenerationProgress.value < 40) {
+            analyseGenerationStatus.value = 'Analyzing document...';
+        } else if (analyseGenerationProgress.value < 60) {
+            analyseGenerationStatus.value = 'Processing data...';
+        } else if (analyseGenerationProgress.value < 80) {
+            analyseGenerationStatus.value = 'Validating information...';
+        } else {
+            analyseGenerationStatus.value = 'Finalizing verification...';
+        }
+    }, 200);
+
+    try {
+        const res = await verifyPromise;
+        if (!res.ok) throw new Error(await res.text());
+        const payload = await res.json();
+
+        // Finish progress and hide processing
+        analyseGenerationProgress.value = 100;
+        clearInterval(anim);
+        isAnalyzing.value = false;
+
+        // Map server payload to existing UI structure
+        analysisResult.value = {
+            success: !!payload?.verified,
+            message: payload?.verified ? 'Verification completed successfully!' : 'Verification failed. Please try again.',
+            details: {
+                verification_id: payload?.policy?.policy_number ?? `VER-${Date.now()}`,
+                date_verified: new Date().toLocaleDateString(),
+                status: payload?.verified ? 'verified' : 'failed',
+                confidence_score: '—',
+            },
+            ...payload,
+        } as any;
+
+        // Decrement remaining uploads locally
+        remaining.value = Math.max(0, (remaining.value ?? 0) - 1);
+
+        // Smooth scrolling
+        setTimeout(() => {
+            if (processingSection.value) {
+                processingSection.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 200);
+        nextTick(() => {
+            if (resultsSection.value) {
+                resultsSection.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    } catch (e) {
+        clearInterval(anim);
+        isAnalyzing.value = false;
+        errorMsg.value = 'Verification failed. Please try again.';
+        console.error(e);
+    }
 }
 
-function onDrop(e: DragEvent) {
-  e.preventDefault();
-  isDragging.value = false;
-  const dt = e.dataTransfer;
-  if (!dt || !dt.files || !dt.files.length) return;
-  const file = dt.files[0];
-  form.image = file;
-  if (form.image && !props.atLimit) submit();
-}
+// Triggered by the "Verify Now" button
+const verify = async () => {
+    if (!canVerify.value || remaining.value <= 0) {
+        errorMsg.value = 'You have reached your upload limit. Please upgrade your plan to continue.';
+        return;
+    }
 
-function onDragOver(e: DragEvent) {
-  e.preventDefault();
-  isDragging.value = true;
-}
+    const tab = activeTab.value;
+    isUploading.value[tab] = true;
+    uploadStatus.value[tab] = { progress: 0, status: 'uploading' };
 
-function onDragLeave() {
-  isDragging.value = false;
+    try {
+        // Drive visual upload progress while real upload runs
+        let uploading = true;
+        const prog = setInterval(() => {
+            if (!uploading) return clearInterval(prog);
+            uploadStatus.value[tab].progress = Math.min(95, uploadStatus.value[tab].progress + 7);
+        }, 120);
+
+        const { path } = await uploadFile();
+        uploading = false;
+        clearInterval(prog);
+        uploadStatus.value[tab].progress = 100;
+        uploadStatus.value[tab].status = 'success';
+
+        // Begin analysis with server and scroll to processing section
+        startAnalysisWithServer(path);
+        setTimeout(() => {
+            if (processingSection.value) {
+                processingSection.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500);
+    } catch (error) {
+        uploadStatus.value[tab] = { progress: 0, status: 'error' };
+        errorMsg.value = 'An error occurred during upload. Please try again.';
+        console.error('Upload/verify error:', error);
+    } finally {
+        isUploading.value[tab] = false;
+    }
 }
 </script>
 
@@ -152,10 +303,19 @@ function onDragLeave() {
   <Head title="Verification" />
   <component :is="Layout" :breadcrumbs="breadcrumbItems">
     <CustomerLayout>
-      <div class="p-6 space-y-6">
-        <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-semibold">Verification</h1>
-          <div class="text-sm text-muted-foreground">Remaining: {{ remainingUploads }} · Resets {{ cycleResetDate }}</div>
+      <div ref="resultsSection" class="p-6 space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold">Verification</h1>
+            <p class="text-sm text-muted-foreground mt-1">Verify licenses, insurance documents, and identity</p>
+          </div>
+          <div class="flex items-center bg-muted/50 px-3 py-1.5 rounded-full text-sm">
+            <i class="fas fa-sync-alt text-primary mr-2"></i>
+            <span>Remaining: {{ remaining }}</span>
+            <span class="mx-2 text-muted-foreground">•</span>
+            <span>Resets {{ cycleResetDate }}</span>
+          </div>
         </div>
 
         <!-- Error banner -->
@@ -163,121 +323,260 @@ function onDragLeave() {
           {{ errorMsg }}
         </div>
 
-        <!-- Validation error banner (shows all errors from ValidationException) -->
-        <div v-if="Object.keys(form.errors).length" class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          <ul class="list-disc pl-5 space-y-1">
-            <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
-          </ul>
-        </div>
+        <!-- Main content -->
+        <div v-if="!analysisResult" class="space-y-6">
+          <!-- Tabs -->
+          <div class="border-b border-muted">
+            <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+              <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                @click="activeTab = tab.id as VerificationType"
+                class="whitespace-nowrap border-b-2 py-4 px-3 text-sm font-medium transition-colors duration-200"
+                :class="{
+                  'border-primary text-primary': activeTab === tab.id,
+                  'border-transparent text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground': activeTab !== tab.id,
+                  'pointer-events-none opacity-50': isUploading[tab.id] || isAnalyzing
+                }"
+              >
+                <i :class="['fas', tab.icon, 'mr-2']"></i>
+                {{ tab.name }}
+              </button>
+            </nav>
+          </div>
 
-        <div v-if="!uploaded"
-          :class="['flex flex-col items-center justify-center rounded border-2 border-dashed p-10 text-center transition-colors', props.atLimit ? 'opacity-60' : '', isDragging ? 'border-primary bg-primary/5' : '']"
-          @dragover="onDragOver"
-          @dragleave="onDragLeave"
-          @drop="onDrop"
-        >
-          <div class="text-lg font-medium">Upload a photo for verification</div>
-          <div class="mt-1 text-sm text-muted-foreground">JPEG, PNG up to 5 MB</div>
+          <!-- Tab content -->
+          <div class="space-y-6">
+            <!-- License Verification -->
+            <div v-if="activeTab === 'license'" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <VerificationCard
+                  v-model="form.licenseFront"
+                  title="License Front"
+                  icon="fa-id-card"
+                  accept="image/*"
+                  accept-text="JPG, PNG (max 5MB)"
+                  :disabled="isUploading[activeTab] || isAnalyzing"
+                  :progress="uploadStatus[activeTab].progress"
+                  :error="uploadStatus[activeTab].status === 'error' ? 'Error uploading file' : ''"
+                />
+                <VerificationCard
+                  v-model="form.licenseBack"
+                  title="License Back"
+                  icon="fa-id-card"
+                  accept="image/*"
+                  accept-text="JPG, PNG (max 5MB)"
+                  :disabled="isUploading[activeTab] || isAnalyzing"
+                  :progress="uploadStatus[activeTab].progress"
+                  :error="uploadStatus[activeTab].status === 'error' ? 'Error uploading file' : ''"
+                />
+              </div>
+              <p class="text-sm text-muted-foreground text-center">
+                Please upload both front and back of your driver's license or ID card
+              </p>
+            </div>
 
-          <form class="mt-4" @submit.prevent="submit">
-            <!-- Hidden metadata for non-programmatic submits; Inertia will send from form state -->
-            <input type="hidden" name="upload_from" :value="form.upload_from" />
-            <input type="hidden" name="_token" :value="form._token" />
-            <input ref="fileInput" class="hidden" type="file" accept="image/*" @change="onFileChanged" />
+            <!-- Insurance Verification -->
+            <div v-else-if="activeTab === 'insurance'" class="space-y-6">
+              <div class="max-w-2xl mx-auto">
+                <VerificationCard
+                  v-model="form.insuranceDoc"
+                  title="Insurance Document"
+                  icon="fa-file-contract"
+                  accept="image/*,.pdf"
+                  accept-text="PDF, JPG, PNG (max 10MB)"
+                  :disabled="isUploading[activeTab] || isAnalyzing"
+                  :progress="uploadStatus[activeTab].progress"
+                  :error="uploadStatus[activeTab].status === 'error' ? 'Error uploading file' : ''"
+                />
+              </div>
+              <p class="text-sm text-muted-foreground text-center">
+                Upload a clear photo or scan of your insurance card or policy document
+              </p>
+            </div>
 
+            <!-- Face Verification -->
+            <div v-else-if="activeTab === 'face'" class="space-y-6">
+              <div class="max-w-md mx-auto">
+                <VerificationCard
+                  v-model="form.faceImage"
+                  title="Face Image"
+                  icon="fa-user"
+                  accept="image/*"
+                  accept-text="JPG, PNG (max 5MB)"
+                  :disabled="isUploading[activeTab] || isAnalyzing"
+                  :progress="uploadStatus[activeTab].progress"
+                  :error="uploadStatus[activeTab].status === 'error' ? 'Error uploading file' : ''"
+                />
+              </div>
+              <p class="text-sm text-muted-foreground text-center">
+                Make sure your face is clearly visible and well-lit. Remove any hats or sunglasses.
+              </p>
+            </div>
 
-            <div class="flex items-center gap-2">
-              <button type="button" class="rounded-md bg-primary px-4 py-2 text-white" :disabled="props.atLimit" @click="onChooseFile">
-                Choose file
+            <!-- Verify Button -->
+            <div class="flex justify-center pt-4">
+              <button
+                @click="verify"
+                :disabled="!canVerify || isUploading[activeTab] || isAnalyzing || remaining <= 0"
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <i v-if="isUploading[activeTab] || isAnalyzing" class="fas fa-spinner fa-spin mr-2"></i>
+                <i v-else-if="!isUploading[activeTab] && !isAnalyzing && remaining <= 0" class="fas fa-exclamation-triangle mr-2"></i>
+                <i v-else class="fas fa-check-circle mr-2"></i>
+                {{
+                    isUploading[activeTab] ? 'Uploading...' :
+                    isAnalyzing ? 'Processing...' :
+                    remaining <= 0 ? 'Upload Limit Reached' : 'Verify Now'
+                }}
               </button>
             </div>
 
-            <!-- Drag and drop helper text -->
-            <div class="mt-2 text-xs text-muted-foreground">or drag & drop an image here</div>
+            <!-- Upgrade Prompt -->
+            <div v-if="remaining <= 0" class="mt-4 text-center">
+                <p class="text-sm text-amber-600">
+                    You've reached your upload limit.
+                    <a :href="route('app.upgrade')" class="text-primary hover:underline font-medium">Upgrade your plan</a>
+                    to continue verifying documents.
+                </p>
+            </div>
+          </div>
+
+          <!-- Analysis Progress -->
+          <div v-if="isAnalyzing" ref="processingSection" class="space-y-6 pt-8">
+            <div class="text-center">
+              <h3 class="text-lg font-medium">Verifying {{ currentVerificationType }}</h3>
+              <p class="text-muted-foreground mt-1">This may take a few moments...</p>
+            </div>
 
             <!-- Progress bar -->
-            <div v-if="form.progress" class="mt-4 w-full">
-              <div class="h-2 w-full rounded bg-gray-200">
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span>Progress</span>
+                <span class="font-medium">{{ Math.round(analyseGenerationProgress) }}%</span>
+              </div>
+              <div class="h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div
-                  class="h-2 rounded bg-green-500 transition-all"
-                  :style="{ width: `${form.progress.percentage}%` }"
-                />
+                  class="h-full transition-all duration-300 rounded-full"
+                  :style="{
+                    width: `${analyseGenerationProgress}%`,
+                    background: `linear-gradient(90deg, ${stepColors[Math.min(Math.floor(analyseGenerationProgress / 20), stepColors.length - 1)]} 0%, ${stepColors[Math.min(Math.ceil(analyseGenerationProgress / 20), stepColors.length - 1)]} 100%)`
+                  }"
+                ></div>
               </div>
-              <div class="mt-1 text-xs text-muted-foreground">Uploading {{ form.progress.percentage }}%</div>
+              <p class="text-sm text-muted-foreground text-center">
+                {{ analyseGenerationStatus }}
+              </p>
             </div>
-          </form>
 
-          <div v-if="form.errors.image" class="mt-3 text-sm text-red-600">{{ form.errors.image }}</div>
-          <div v-if="props.atLimit" class="mt-3 text-sm text-red-600">You've reached your quota.
-            <a :href="upgradeUrl" class="underline">Upgrade your plan</a>.
-        </div>
-        </div>
-
-        <!-- Preview and processing / result -->
-        <div v-if="uploaded" class="space-y-6 relative">
-
-          <!-- Preview -->
-          <div class="flex items-center gap-4">
-            <img v-if="imageUrl" :src="imageUrl" alt="Uploaded" class="h-32 w-32 rounded border object-cover" />
+            <!-- Processing steps -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
+              <div
+                v-for="(step, index) in analyseSteps"
+                :key="index"
+                class="flex flex-col items-center text-center p-3 rounded-lg transition-colors"
+                :class="{
+                  'bg-primary/5 border border-primary/20': index * 20 <= analyseGenerationProgress,
+                  'opacity-50': index * 20 > analyseGenerationProgress
+                }"
+              >
+                <span class="text-2xl mb-2">{{ step.emoji }}</span>
+                <span class="text-xs font-medium">{{ step.label }}</span>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <!-- Processing overlay -->
-
-          <div v-if="processing" class="relative">
-            <div class="analyse-processing-overlay">
-              <div class="analyse-processing-content">
-                <div class="analyse-processing-animation">
-                  <div class="analyse-icon">📷</div>
-                  <div class="analyse-scanning-beam"></div>
-                  <div class="analyse-pulse-rings">
-                    <div class="pulse-ring ring-1"></div>
-                    <div class="pulse-ring ring-2"></div>
-                    <div class="pulse-ring ring-3"></div>
-                  </div>
+        <!-- Results -->
+        <div v-else ref="resultsSection" class="space-y-6">
+          <div
+            :class="{
+              'bg-green-50 border-l-4 border-green-400': analysisResult.success,
+              'bg-red-50 border-l-4 border-red-400': !analysisResult.success
+            }"
+            class="p-6 rounded-r-md"
+          >
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i
+                  :class="{
+                    'fas fa-check-circle text-green-400 text-2xl': analysisResult.success,
+                    'fas fa-times-circle text-red-400 text-2xl': !analysisResult.success
+                  }"
+                ></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium">
+                  {{ analysisResult.success ? 'Verification Successful' : 'Verification Failed' }}
+                </h3>
+                <div class="mt-2">
+                  <p :class="{ 'text-green-700': analysisResult.success, 'text-red-700': !analysisResult.success }">
+                    {{ analysisResult.message }}
+                  </p>
                 </div>
-                <div class="analyse-processing-text">
-                  <h3>Insurance Verification</h3>
-                  <p class="processing-message">{{ analyseGenerationStatus }}</p>
-                  <div class="progress-bar-container">
-                    <div class="progress-bar-fill" :style="{ width: analyseGenerationProgress + '%' }">
-                      <span class="progress-text">{{ Math.round(analyseGenerationProgress) }}%</span>
+
+                <!-- Result details -->
+                <div v-if="analysisResult.details" class="mt-4 bg-white/50 p-4 rounded-md">
+                  <h4 class="font-medium text-sm mb-2">Verification Details</h4>
+                  <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                    <div v-for="(value, key) in analysisResult.details" :key="key" class="sm:col-span-1">
+                      <dt class="text-xs font-medium text-muted-foreground">{{ key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') }}</dt>
+                      <dd class="mt-1 text-sm text-foreground font-medium">{{ value }}</dd>
                     </div>
-                  </div>
+                  </dl>
                 </div>
-                <div class="analyse-processing-stats">
-                  <div v-for="(s, i) in analyseSteps" :key="i" class="stat-item" :class="{ active: s.label === analyseGenerationStatus }">
-                    <span class="icon-badge" :style="{ backgroundColor: stepColors[i % stepColors.length] }">{{ s.emoji }}</span>
-                    <span>{{ s.label.replace('…','') }}</span>
-                  </div>
+
+                <div class="mt-6 flex space-x-3">
+                  <button
+                    @click="resetVerification"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  >
+                    <i class="fas fa-redo mr-2"></i>
+                    Verify Again
+                  </button>
+
+                  <button
+                    v-if="analysisResult.success"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  >
+                    <i class="fas fa-download mr-2"></i>
+                    Download Certificate
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Result card -->
-          <div v-if="result" class="rounded-xl border bg-white p-6 shadow-sm dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold">Insurance Verification</h2>
-              <span :class="['rounded px-2 py-0.5 text-xs', result.verified ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800']">
-                {{ result.verified ? 'Verified' : 'Not verified' }}
-              </span>
-            </div>
-            <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div><div class="text-xs text-muted-foreground">Policy #</div><div class="font-medium">{{ result.policy.policy_number }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Provider</div><div class="font-medium">{{ result.policy.provider }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Insured</div><div class="font-medium">{{ result.policy.insured_name }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Coverage</div><div class="font-medium">{{ result.policy.coverage }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Effective</div><div class="font-medium">{{ result.policy.effective_date }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Expires</div><div class="font-medium">{{ result.policy.expiration_date }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Premium</div><div class="font-medium">{{ result.policy.premium }} {{ result.policy.currency }}</div></div>
-              <div><div class="text-xs text-muted-foreground">Status</div><div class="font-medium">{{ result.policy.status }}</div></div>
+          <!-- Next steps -->
+          <div v-if="analysisResult.success" class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-medium text-blue-800 mb-2">What's next?</h4>
+            <ul class="space-y-2 text-sm text-blue-700">
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-blue-400 mt-0.5 mr-2"></i>
+                <span>Your verification has been saved to your account</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fas fa-envelope text-blue-400 mt-0.5 mr-2"></i>
+                <span>We've sent a confirmation email with your verification details</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fas fa-clock text-blue-400 mt-0.5 mr-2"></i>
+                <span>Verification is valid for 12 months</span>
+              </li>
+            </ul>
+            <div class="mt-4">
+              <div class="text-xs text-muted-foreground">Status</div>
+              <div class="font-medium">{{ analysisResult?.policy?.status || 'Pending' }}</div>
             </div>
             <div class="mt-6">
-              <div class="text-sm font-medium">Checks</div>
-              <ul class="mt-2 grid gap-2 sm:grid-cols-2">
-                <li v-for="(c, i) in result.checks" :key="i" class="flex items-center gap-2 text-sm">
-                  <span class="h-2 w-2 rounded-full" :class="c.status === 'passed' || c.status === 'clear' ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                  {{ c.label }} — <span class="text-muted-foreground">{{ c.status }}</span>
+              <div class="text-sm font-medium mb-2">Checks</div>
+              <ul v-if="analysisResult?.checks" class="mt-2 grid gap-2 sm:grid-cols-2">
+                <li v-for="(check, index) in analysisResult.checks" :key="index" class="flex items-center gap-2 text-sm">
+                  <span
+                    class="h-2 w-2 rounded-full"
+                    :class="check.status === 'passed' || check.status === 'clear' ? 'bg-emerald-500' : 'bg-red-500'"
+                  ></span>
+                  {{ check.label }} — <span class="text-muted-foreground">{{ check.status }}</span>
                 </li>
               </ul>
             </div>

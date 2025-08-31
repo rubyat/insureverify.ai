@@ -148,7 +148,7 @@ class UpgradeController extends Controller
                 'subscription_id' => $new->id,
                 'user_id' => $user->id,
                 'number' => Invoice::generateInvoiceNumber(),
-                'status' => 'issued',
+                'status' => 'open',
                 'currency' => 'USD',
                 'subtotal_cents' => $priceMonthlyCents,
                 'discount_cents' => 0,
@@ -165,7 +165,7 @@ class UpgradeController extends Controller
 
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
-                'type' => 'subscription',
+                'type' => 'base_fee',
                 'description' => 'Subscription - ' . ($plan->name ?? 'Plan') . ' (Monthly)',
                 'quantity' => 1,
                 'unit_price_cents' => $priceMonthlyCents,

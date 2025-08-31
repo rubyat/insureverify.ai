@@ -49,9 +49,10 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'terms' => ['accepted'],
             // Payment placeholders from the marketing form; not used by backend yet
-            'card' => ['nullable', 'string'],
-            'exp' => ['nullable', 'string'],
-            'cvv' => ['nullable', 'string'],
+            // Validate format if provided: allow digits/spaces/dashes for card, MM/YY or MM/YYYY for exp, 3-4 digits for CVV
+            'card' => ['required', 'string', 'regex:/^(?:\d[ -]?){12,19}$/'],
+            'exp' => ['required', 'string', 'regex:/^(0[1-9]|1[0-2])\/?((?:\d{2})|(?:\d{4}))$/'],
+            'cvv' => ['required', 'string', 'regex:/^\d{3,4}$/'],
         ]);
 
         // Create user and assign default subscriber role
@@ -177,7 +178,7 @@ class AuthController extends Controller
                 'subscription_id' => $subscription->id,
                 'user_id' => $user->id,
                 'number' => Invoice::generateInvoiceNumber(),
-                'status' => 'issued',
+                'status' => 'open',
                 'currency' => 'USD',
                 'subtotal_cents' => $priceMonthlyCents,
                 'discount_cents' => 0,
@@ -194,7 +195,7 @@ class AuthController extends Controller
 
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
-                'type' => 'subscription',
+                'type' => 'base_fee',
                 'description' => 'Subscription - ' . ($plan->name ?? 'Plan') . ' (Monthly)',
                 'quantity' => 1,
                 'unit_price_cents' => $priceMonthlyCents,
