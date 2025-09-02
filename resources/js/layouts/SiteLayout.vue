@@ -20,6 +20,7 @@ const mobileAccountOpen = ref(false)
 
 const page = usePage()
 const authUser = computed(() => (page.props as any)?.auth?.user)
+const isAdmin = computed(() => (page.props as any)?.auth?.is_admin)
 // Settings shared via Inertia from config('settings')
 const settings = computed(() => (page.props as any)?.settings ?? {})
 const copyrightText = computed(() => settings.value?.copyright || `© ${new Date().getFullYear()} InsureVerifyAI. All rights reserved.`)
@@ -138,18 +139,20 @@ function panelAfterLeave(el: Element) {
               <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
             </button>
             <div id="user-menu" v-show="menuOpen" class="absolute right-0 top-12 w-48 bg-white text-gray-700 rounded-md shadow border border-gray-200 py-1 z-50">
-              <Link :href="route('app.dashboard')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+              <Link :href="isAdmin ? route('admin.dashboard') : route('app.dashboard')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
                 <i class="fa-solid fa-house w-4 text-gray-500"></i>
                 <span>Dashboard</span>
               </Link>
-              <Link :href="route('profile.edit')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
-                <i class="fa-regular fa-id-card w-4 text-gray-500"></i>
-                <span>Profile</span>
-              </Link>
-              <Link :href="route('appearance')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
-                <i class="fa-solid fa-gear w-4 text-gray-500"></i>
-                <span>Settings</span>
-              </Link>
+              <template v-if="!isAdmin">
+                <Link :href="route('profile.edit')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                  <i class="fa-regular fa-id-card w-4 text-gray-500"></i>
+                  <span>Profile</span>
+                </Link>
+                <Link :href="route('appearance')" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                  <i class="fa-solid fa-gear w-4 text-gray-500"></i>
+                  <span>Settings</span>
+                </Link>
+              </template>
               <Link :href="route('logout')" method="post" as="button" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-gray-50">
                 <i class="fa-solid fa-arrow-right-from-bracket w-4 text-gray-500"></i>
                 <span>Logout</span>
@@ -209,15 +212,17 @@ function panelAfterLeave(el: Element) {
           <div class="px-4 py-3 space-y-2 text-sm">
             <template v-if="authUser">
               <div class="grid grid-cols-1 gap-2 text-right">
-                <Link :href="route('app.dashboard')" class="block px-3 py-2 rounded hover:bg-white/10">
+                <Link :href="isAdmin ? route('admin.dashboard') : route('app.dashboard')" class="block px-3 py-2 rounded hover:bg-white/10">
                   <span class="flex items-center justify-end gap-2"><span>Dashboard</span><i class="fa-solid fa-gauge w-4"></i></span>
                 </Link>
-                <Link :href="route('profile.edit')" class="block px-3 py-2 rounded hover:bg-white/10">
-                  <span class="flex items-center justify-end gap-2"><span>Profile</span><i class="fa-regular fa-id-card w-4"></i></span>
-                </Link>
-                <Link :href="route('appearance')" class="block px-3 py-2 rounded hover:bg-white/10">
-                  <span class="flex items-center justify-end gap-2"><span>Settings</span><i class="fa-solid fa-gear w-4"></i></span>
-                </Link>
+                <template v-if="!isAdmin">
+                  <Link :href="route('profile.edit')" class="block px-3 py-2 rounded hover:bg-white/10">
+                    <span class="flex items-center justify-end gap-2"><span>Profile</span><i class="fa-regular fa-id-card w-4"></i></span>
+                  </Link>
+                  <Link :href="route('appearance')" class="block px-3 py-2 rounded hover:bg-white/10">
+                    <span class="flex items-center justify-end gap-2"><span>Settings</span><i class="fa-solid fa-gear w-4"></i></span>
+                  </Link>
+                </template>
                 <Link :href="route('logout')" method="post" as="button" class="block w-full px-3 py-2 rounded hover:bg-white/10 text-right">
                   <span class="flex items-center justify-end gap-2"><span>Logout</span><i class="fa-solid fa-arrow-right-from-bracket w-4"></i></span>
                 </Link>
