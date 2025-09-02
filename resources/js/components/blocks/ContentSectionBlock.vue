@@ -18,7 +18,7 @@ const imgSrc = computed(() => props.model.image || '')
       :class="isTextFull ? 'grid-cols-1' : 'md:grid-cols-2'"
     >
       <!-- Image -->
-      <div v-if="hasImage && !isTextFull" :class="imageOnLeft ? 'order-none' : 'order-1 md:order-none'">
+      <div v-if="hasImage" :class="[ imageOnLeft ? 'md:order-first' : 'md:order-last', isTextFull ? 'col-span-1' : '' ]">
         <div class="relative">
           <img
             :src="imgSrc"
@@ -29,7 +29,7 @@ const imgSrc = computed(() => props.model.image || '')
       </div>
 
       <!-- Text Content -->
-      <div>
+      <div :class="isTextFull ? 'col-span-1' : ''">
         <div class="mt-3 space-y-4">
           <h2 v-if="props.model.title" class="text-3xl md:text-5xl font-extrabold leading-tight text-slate-900">
             {{ props.model.title }}
