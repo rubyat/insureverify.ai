@@ -24,6 +24,11 @@
         "vue-tsc": "^2.2.4"
     },
     "dependencies": {
+        "@ckeditor/ckeditor5-build-classic": "^44.3.0",
+        "@ckeditor/ckeditor5-vue": "^7.3.0",
+        "@fortawesome/fontawesome-svg-core": "^7.0.1",
+        "@fortawesome/free-brands-svg-icons": "^7.0.1",
+        "@fortawesome/vue-fontawesome": "^3.1.1",
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/vite": "^4.1.11",
         "@vitejs/plugin-vue": "^6.0.0",

@@ -10,12 +10,33 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Library\Settings;
 use App\Library\PageBuilder\TemplatePreprocessor;
+use App\Services\FileManagerService;
 
 class BlogPublicController extends Controller
 {
-    public function index(Request $request, ?string $category = null): Response
-    {
 
+    public function __construct(private FileManagerService $fm)
+    {
+    }
+
+
+    public function index(Request $request): Response
+    {
+        return $this->renderIndex($request);
+    }
+
+    public function byCategory(Request $request, string $category): Response
+    {
+        return $this->renderIndex($request, $category, null);
+    }
+
+    public function byTag(Request $request, string $tag): Response
+    {
+        return $this->renderIndex($request, null, $tag);
+    }
+
+    private function renderIndex(Request $request, ?string $category = null, ?string $tag = null): Response
+    {
         // Ensure $q is a plain string (Request::string returns Stringable)
         $q = (string) $request->string('q');
 
@@ -39,19 +60,35 @@ class BlogPublicController extends Controller
                     $q->where('slug', $category);
                 });
             })
+            ->when($tag, function ($query) use ($tag) {
+                $decodedTag = urldecode($tag);
+                $query->whereJsonContains('tags', $decodedTag);
+            })
             ->latest('publish_date')
             ->paginate(9)
             ->withQueryString();
 
+        // Fetch all unique tags
+        $allTags = Blog::query()
+            ->where('status', 1)
+            ->whereNotNull('tags')
+            ->pluck('tags')
+            ->flatMap(fn ($tags) => $tags)
+            ->unique()
+            ->sort()
+            ->values();
+
         // SEO meta
-        $title = 'Blog' . ($category ? ' - ' . str_replace('-', ' ', ucfirst($category)) : '');
+        $title = 'Blog' . ($category ? ' - ' . str_replace('-', ' ', ucfirst($category)) : '') . ($tag ? ' - ' . ucfirst($tag) : '');
         Meta::addTitle($title);
         Meta::addMeta('description', 'Insights, updates, and guides from InsureVerify AI.');
 
         return Inertia::render('Blog/Index', [
             'blogs' => $blogs,
             'categories' => $categories,
+            'tags' => $allTags,
             'activeCategory' => $category,
+            'activeTag' => $tag,
             'filters' => ['q' => $q],
         ]);
     }
@@ -177,9 +214,23 @@ class BlogPublicController extends Controller
             }
         }
 
+        $relatedBlogs = Blog::query()
+            ->where('status', 1)
+            ->where('id', '!=', $blog->id)
+            ->when($blog->category_id, function ($query) use ($blog) {
+                $query->where('category_id', $blog->category_id);
+            })
+            ->inRandomOrder()
+            ->limit(4)
+            ->get(['id', 'title', 'slug', 'image']);
+
+        $blogBanner = $this->fm->resize($blog->seo->seo_image, 1080, 0);
+
         return Inertia::render('Blog/Show', [
             'blog' => $blog,
+            'blogBanner' => $blogBanner,
             'template' => $template,
+            'relatedBlogs' => $relatedBlogs,
             'seo' => [
                 'title' => $title,
                 'description' => $description,

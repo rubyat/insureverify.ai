@@ -95,6 +95,7 @@ class BuilderController extends Controller
             'livePreviewEndpoint' => route('admin.pages.live_preview', $page->id),
             'saveEndpoint' => route('admin.pages.template.save', $page->id),
             'blocksThumbEndpoint' => route('admin.blocks.thumb'),
+            'editEndpoint' => route('admin.pages.edit', $page->id),
         ]);
     }
 

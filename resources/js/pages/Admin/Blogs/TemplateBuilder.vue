@@ -10,6 +10,7 @@ const props = defineProps<{
   livePreviewEndpoint: string
   saveEndpoint: string
   blocksThumbEndpoint: string
+  editEndpoint: string
 }>()
 </script>
 
@@ -28,6 +29,7 @@ const props = defineProps<{
         :live-preview-endpoint="props.livePreviewEndpoint"
         :save-endpoint="props.saveEndpoint"
         :blocks-thumb-endpoint="props.blocksThumbEndpoint"
+        :edit-endpoint="props.editEndpoint"
       />
     </div>
   </AppLayout>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, toRefs, nextTick } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import RichTextEditor from '@/components/RichTextEditor.vue'
 import ImagePicker from '@/components/filemanager/ImagePicker.vue'
 
 const props = defineProps<{ node: any; block: any; thumbEndpoint?: string }>()
@@ -36,20 +35,23 @@ watch(block, (b) => {
 }, { immediate: true, deep: true })
 
 
+
+
 </script>
 
 <template>
   <div class="space-y-3" v-if="block">
+
     <template v-for="s in (block.settings || [])" :key="s.id">
       <div>
-        <label class="block text-sm">{{ s.label || s.id }}</label>
+        <label class="block text-sm">{{ s.label || s.id }} {{ s.type }}</label>
 
         <template v-if="s.type === 'input'">
           <input v-model="model[s.id]" :type="s.inputType || 'text'" class="mt-1 w-full rounded border px-3 py-2" />
         </template>
 
         <template v-else-if="s.type === 'editor'">
-          <QuillEditor v-model:content="model[s.id]" contentType="html" theme="snow" class="mt-1 bg-white" />
+          <RichTextEditor v-model="model[s.id]" />
         </template>
 
         <template v-else-if="s.type === 'uploader'">
@@ -58,6 +60,7 @@ watch(block, (b) => {
             :placeholder="model['placeholder'] || s.placeholder || '/storage/placeholder.png'"
           />
         </template>
+
 
         <template v-else-if="s.type === 'radios'">
           <div class="mt-1 flex flex-wrap gap-2">
@@ -86,7 +89,7 @@ watch(block, (b) => {
                     <input v-model="it[cs.id]" :type="cs.inputType || 'text'" class="mt-1 w-full rounded border px-3 py-2" />
                   </template>
                   <template v-else-if="cs.type === 'editor'">
-                    <QuillEditor v-model:content="it[cs.id]" contentType="html" theme="snow" class="mt-1 bg-white" />
+                    <RichTextEditor v-model="it[cs.id]" />
                   </template>
                   <template v-else>
                     <input v-model="it[cs.id]" type="text" class="mt-1 w-full rounded border px-3 py-2" />
@@ -108,7 +111,7 @@ watch(block, (b) => {
         </template>
 
         <template v-else>
-          <input v-model="model[s.id]" type="text" class="mt-1 w-full rounded border px-3 py-2" />
+          <input v-model="model[s.id]" type="text" class="mt-1 w-full rounded border px-3 py-2" />1
         </template>
       </div>
     </template>

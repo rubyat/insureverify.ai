@@ -11,6 +11,7 @@ const props = defineProps<{
   blocksEndpoint: string
   livePreviewEndpoint: string
   saveEndpoint: string
+  editEndpoint: string
   blocksThumbEndpoint: string
 }>()
 
@@ -190,6 +191,13 @@ async function openLivePreview() {
             <i class="fa-regular fa-window-restore"></i>
             <span>Live Preview</span>
           </button>
+          <a
+            :href="props.editEndpoint"
+            class="rounded border px-4 py-2 text-sm inline-flex items-center gap-2 disabled:opacity-60"
+          >
+            <i class="fa-regular fa-pen-to-square"></i>
+            <span>Edit this page</span>
+          </a>
         </div>
       </div>
 
@@ -262,7 +270,7 @@ async function openLivePreview() {
               <div class="space-x-2 hidden"></div>
             </div>
             <div class="p-4">
-              <BlockRenderer :template="tpl" :selectable="true" @select="(id) => (selectedNodeId = id)" />
+              <BlockRenderer :template="tpl" :selectable="true" @select="(id: string) => (selectedNodeId = id)" />
             </div>
           </div>
         </main>

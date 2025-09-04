@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\PageBuilder;
 
 use App\Http\Controllers\Controller;
+use App\Library\Meta;
 use App\Library\PageBuilder\Registry;
-use App\Library\PageBuilder\Renderer;
+use App\Library\PageBuilder\TemplatePreprocessor;
+use App\Library\Settings;
 use App\Models\Blog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 use App\Services\FileManagerService;
 use App\Models\Plan;
 
@@ -63,6 +66,7 @@ class BlogBuilderController extends Controller
             'livePreviewEndpoint' => route('admin.blogs.live_preview', $blog->id),
             'saveEndpoint' => route('admin.blogs.template.save', $blog->id),
             'blocksThumbEndpoint' => route('admin.blocks.thumb'),
+            'editEndpoint' => route('admin.blogs.edit', $blog->id),
         ]);
     }
 
@@ -117,22 +121,69 @@ class BlogBuilderController extends Controller
         ]);
     }
 
-    public function livePreview(Blog $blog)
+    public function livePreview(Blog $blog): Response
     {
+        $blog->load('category', 'seo');
 
-        // Ensure template exists
         $template = $blog->template ?: [
             'ROOT' => ['type' => 'root', 'nodes' => [], 'version' => '1.1'],
         ];
 
-        // Use shared preprocessor to keep logic DRY with frontend
-        $pre = app(\App\Library\PageBuilder\TemplatePreprocessor::class);
+        /** @var TemplatePreprocessor $pre */
+        $pre = app(TemplatePreprocessor::class);
         $template = $pre->process($template);
 
-        // Client-side rendering only
-        return Inertia::render('Admin/Pages/LivePreview', [
-            'page' => $blog,
+        // SEO meta
+        $title = $blog->seo->seo_title ?? $blog->title ?? ucfirst($blog->slug);
+        $description = $blog->seo->seo_description ?? null;
+        $keywords = $blog->seo->seo_keyword ?? null;
+        $canonical = url('/' . ltrim($blog->slug, '/'));
+        $image = $blog->seo->seo_image ?? null;
+
+        Meta::addTitle($title);
+        if ($blog->seo) {
+            foreach ([
+                'description' => $blog->seo->seo_description,
+                'og:title' => $title,
+                'og:description' => $blog->seo->seo_description,
+                'og:url' => $canonical,
+                'og:type' => 'website',
+                'og:image' => $blog->seo->seo_image,
+                'twitter:card' => 'summary_large_image',
+                'twitter:title' => $title,
+                'twitter:description' => $blog->seo->seo_description,
+                'twitter:image' => $blog->seo->seo_image,
+            ] as $k => $v) {
+                if ($v) Meta::addMeta($k, $v);
+            }
+        }
+
+        $relatedBlogs = Blog::query()
+            ->where('status', 1)
+            ->where('id', '!=', $blog->id)
+            ->when($blog->category_id, function ($query) use ($blog) {
+                $query->where('category_id', $blog->category_id);
+            })
+            ->inRandomOrder()
+            ->limit(4)
+            ->get(['id', 'title', 'slug', 'image']);
+
+        /** @var FileManagerService $fm */
+        $fm = app(FileManagerService::class);
+        $blogBanner = $fm->resize($blog->seo->seo_image, 1080, 0);
+
+        return Inertia::render('Blog/Show', [
+            'blog' => $blog,
+            'blogBanner' => $blogBanner,
             'template' => $template,
+            'relatedBlogs' => $relatedBlogs,
+            'seo' => [
+                'title' => $title,
+                'description' => $description,
+                'keywords' => $keywords,
+                'canonical' => $canonical,
+                'image' => $image,
+            ],
         ]);
     }
 }

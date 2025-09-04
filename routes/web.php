@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\BlogPublicController;
 
 // Marketing and public routes moved to routes/frontend.php
 
@@ -22,6 +23,10 @@ require __DIR__.'/filemanager.php';
 
 // Subscription and other authenticated customer routes moved to routes/frontend.php
 
+
+Route::get('/blog/category/{category}', [BlogPublicController::class, 'byCategory'])->name('blog.category');
+Route::get('/blog/tag/{tag}', [BlogPublicController::class, 'byTag'])->name('blog.tag');
+Route::get('/blog/{slug}', [BlogPublicController::class, 'show'])->name('blog.show');
 
 Route::get('/_setup/storage-link', function () {
 
